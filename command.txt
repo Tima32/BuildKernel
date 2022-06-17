@@ -1,0 +1,1 @@
+make DEBFULLNAME=MyName DEBEMAIL=my@mail.org UTS_MACHINE=armhf KBUILD_IMAGE=uImage KDEB_CHANGELOG_DIST=buster bindeb-pkg -j4
