@@ -1,0 +1,6 @@
+config KEYBOARD_ETN
+	tristate "ETN keyboard driver"
+	depends on KEYBOARD_ADP5589
+	default m
+	help
+	  This driver implements device tree support for ADP5589 I2C Keypad.

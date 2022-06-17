@@ -1,0 +1,127 @@
+#include "m720-2.dtsi"
+
+/ {
+	model = "M720 SmartSFP rev.Ax220";
+
+	host-gpio {
+		compatible = "linux,gpio-exporter";
+		status = "okay";
+		exported-gpios = <&sfp0_gpio 0 GPIO_ACTIVE_HIGH>,
+				 <&sfp0_gpio 1 GPIO_ACTIVE_HIGH>,
+				 <&sfp0_gpio 2 GPIO_ACTIVE_HIGH>,
+				 <&sfp0_gpio 3 GPIO_ACTIVE_HIGH>,
+				 <&sfp0_gpio 4 GPIO_ACTIVE_HIGH>,
+				 <&sfp0_gpio 5 GPIO_ACTIVE_HIGH>,
+				 <&sfp0_gpio 6 GPIO_ACTIVE_HIGH>;
+		exported-gpio-names = "tx-sd",
+				      "rx-los",
+				      "tx-dis",
+				      "tx-flt",
+				      "rate-select",
+				      "rx-los-ctrl",
+				      "tx-flt-ctrl";
+		exported-gpio-directions = "in", "in", "in", "in", "in", "high", "high";
+	};
+
+	cpu-gpio {
+		compatible = "linux,gpio-exporter";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_eeprom &pinctrl_userswitch>;
+		status = "okay";
+		exported-gpios = <&gpio3 12 GPIO_ACTIVE_HIGH>,
+				 <&gpio3 13 GPIO_ACTIVE_HIGH>,
+				 <&gpio1  9 GPIO_ACTIVE_HIGH>,
+				 <&gpio3 15 GPIO_ACTIVE_LOW>,
+				 <&gpio3 16 GPIO_ACTIVE_LOW>;
+		exported-gpio-names = "host-eeprom-write-protect",
+				      "host-eeprom-address-select",
+				      "devinfo-eeprom-write-protect",
+				      "user-set0",
+				      "user-set1";
+		exported-gpio-directions = "high", "low", "high", "in", "in";
+	};
+	
+
+	sfp0_gpio: fpga-sfp0-gpio {
+		compatible = "stcmtk,grif-gpio-expander";
+		target-fpga = <&fpga0>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-line-names = "tx-sd", "rx-los",
+				  "tx-dis", "tx-fault",
+				  "rate-select", "rx-los-ctrl",
+				  "tx-flt-ctrl";
+	};
+};
+
+&i2c3 {
+	/* device info EEPROM */
+	devinfo@56 {
+		compatible = "microchip,24c02", "at24";
+		vin-supply = <&pmic_io_reg>;
+		reg = <0x56>;
+		pagesize = <8>;
+	};
+};
+
+&i2c4 {
+	nt25l90_device@54 {
+		compatible = "linux,nt25l90";
+		status = "okay";
+		reg = <0x54>;
+	};
+};
+
+&iomuxc {
+	stcmtk-smart-sfp {
+		pinctrl_eeprom: eepromgrp {
+			fsl,pins = <
+				MX6UL_PAD_LCD_DATA07__GPIO3_IO12 0x000018B0 /*nWP_EEP,Host EEPROM write protect */
+				MX6UL_PAD_GPIO1_IO09__GPIO1_IO09 0x000018B0 /* Device info EEPROM write protect*/
+				MX6UL_PAD_LCD_DATA08__GPIO3_IO13 0x000010B0 /* EEP_ASET, Address */
+			>;
+		};
+	};
+};
+
+&fpga_net0 {
+	phy-mode = "internal";
+
+	link-gpios = <&gpio1 5 GPIO_ACTIVE_HIGH>; /* FPGA_INT2 - Link state */
+
+	fixed-link {
+		speed = <1000>;
+		full-duplex;
+	};
+};
+
+&pmic	{
+	regulators {
+	        /* 3V3_SFP - test point P11 */
+	        pmic_laser_reg: sw2 {
+			regulator-name = "laser_driver_supply";
+			regulator-min-microvolt = <3000000>;
+			regulator-max-microvolt = <3300000>;
+			regulator-boot-on;
+			regulator-always-on;
+		};
+		/* 2V5_FPGA - test point P10 */
+		pmic_fpga_aux_reg: vldo1 {
+			regulator-name = "fpga_vccaux_vccauxa";
+			regulator-min-microvolt = <2400000>;
+			regulator-max-microvolt = <2600000>;
+			regulator-boot-on;
+			regulator-always-on;
+			vin-supply = <&pmic_laser_reg>;
+		};
+		/* 1V1_TRA - test point P6 */
+		pmic_fpga_tra_reg: vldo2 {
+			regulator-name = "fpga_vcch";
+			regulator-min-microvolt = <1050000>;
+			regulator-max-microvolt = <1150000>;
+			regulator-boot-on;
+			regulator-always-on;
+			vin-supply = <&pmic_laser_reg>;
+		};
+	};
+};

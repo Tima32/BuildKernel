@@ -1,0 +1,16 @@
+#
+# Probe Memory reserve
+#
+
+config MEM_RESERVE
+        tristate "ETN memory reserve driver"
+        default m
+        help
+            mem-reserve -- driver for using reserved-memory region.
+            This driver is char device, which provides methods for accsess
+            to reserved-memory region for user-space application:
+                open
+                write
+                read
+                lseek
+                close

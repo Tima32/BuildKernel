@@ -1,0 +1,9 @@
+#
+# Probe device configuration
+#
+
+config GRIF_FPGA_MGR
+	tristate "Grif FPGA manager"
+	depends on ECP5_FPGA_MGR
+	help
+	  This enables the support for the grif FPGA manager that provides FPGA features control

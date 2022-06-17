@@ -1,0 +1,8 @@
+#
+# Probe device configuration
+#
+
+config ECP5_FPGA_MGR
+	tristate "Probe ecp5 fpga manager"
+	help
+	  This enables the support for the Probe ecp5 fpga manager that can firmware FPGA via SPI

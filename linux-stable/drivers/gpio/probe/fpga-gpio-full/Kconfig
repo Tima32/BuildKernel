@@ -1,0 +1,10 @@
+#
+# Probe device configuration
+#
+
+config GRIF_GPIO_EXPANDER
+	tristate "Probe full GPIO expander for Grif FPGA sfp control feature"
+        default m
+        depends on (GRIF_FPGA_MGR || ETN_FPGA_MGR) && COMMON_FPGA_DRIVER
+	help
+	  This driver controls a FPGA-based GPIO expander.

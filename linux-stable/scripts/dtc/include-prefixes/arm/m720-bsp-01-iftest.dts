@@ -1,0 +1,103 @@
+#include "m720-hwtests.dtsi"
+
+/ {
+	sfp0_gpio: fpga-sfp0-gpio {
+		compatible = "stcmtk,grif-gpio-expander";
+		target-fpga = <&fpga0>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-line-names = "tx-sd", "rx-los",
+				  "tx-dis", "tx-fault",
+				  "rate-select", "rx-los-ctrl",
+				  "tx-flt-ctrl";
+	};
+};
+
+&ecspi1 {
+	fpga0: fpga@1 {
+		compatible = "stcmtk,grif-fpga-mgr-spi";
+		fpga-name = "FPGA for if-tests";
+		firmware-name = "m720_01_aa-fpga-if-test.img";
+		spi-max-frequency = <20000000>;
+		reg = <1>;
+		status = "okay";
+		cs-gpios = <&gpio3 26 GPIO_ACTIVE_HIGH>;
+		ecp5-fpga-mgr = <&ecp5>;
+		vcc-supply = <&pmic_fpga_core_reg>;
+		vcc-tra-supply = <&pmic_fpga_tra_reg>;
+		vcc-aux-supply = <&pmic_fpga_aux_reg>;
+		no-parse-fpga-features;
+	};
+};
+
+&iomuxc {
+	stcmtk-smart-sfp {
+		pinctrl_hog_1: hoggrp-1 {
+			fsl,pins = <
+				/* ???: Not used by drivers, only for exporting to userspace */
+				MX6UL_PAD_GPIO1_IO02__GPIO1_IO02 0x000010B0 /* SDMA INT */
+				/*MX6UL_PAD_GPIO1_IO02__SDMA_EXT_EVENT00 0x000010B0*/ /* SDMA INT */
+			>;
+		};
+	};
+};
+
+&weim {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_weim>;
+	/* Open EIM clock gate */
+	clocks = <&clks IMX6UL_CLK_EIM>;
+	assigned-clocks = <&clks IMX6UL_CLK_EIM_SLOW_SEL>,
+			  <&clks IMX6UL_CLK_EIM_SLOW_PODF>;
+	/* Choose PLL2 PFD2 clock source 400 MHz... */
+	assigned-clock-parents = <&clks IMX6UL_CLK_PLL2_PFD2>;
+	/* ... and divide it by 8 */
+	assigned-clock-rates = <0>, <50000000>;
+	status = "okay";
+	#address-cells = <2>;
+	#size-cells = <1>;
+	ranges = <0 0 0x50000000 0x08000000>; /* We are using only CS0 */
+	fsl,burst-clk-enable;
+	fsl,continuous-burst-clk;
+
+	dummy-device0 {
+		compatible = "stcmtk,dummy-device";
+		reg = <0 0x0 0x8000>;
+		/* CS0 Configuration registers:
+		    CSxGCR1, CSxGCR2, CSxRCR1,
+		    CSxRCR2, CSxWCR1, CSxWCR2*/
+		fsl,weim-cs-timing = <0x0111008f 0x00001000 0x02000000
+				      0x00000000 0x01000000 0x00000000>;
+	};
+};
+
+&pmic	{
+	regulators {
+	        /* 3V3_SFP - test point P11 */
+	        pmic_laser_reg: sw2 {
+			regulator-name = "laser_driver_supply";
+			regulator-min-microvolt = <3000000>;
+			regulator-max-microvolt = <3300000>;
+			regulator-boot-on;
+			regulator-always-on;
+		};
+		/* 2V5_FPGA - test point P10 */
+		pmic_fpga_aux_reg: vldo1 {
+			regulator-name = "fpga_vccaux_vccauxa";
+			regulator-min-microvolt = <2400000>;
+			regulator-max-microvolt = <2600000>;
+			regulator-boot-on;
+			regulator-always-on;
+			vin-supply = <&pmic_laser_reg>;
+		};
+		/* 1V1_TRA - test point P6 */
+		pmic_fpga_tra_reg: vldo2 {
+			regulator-name = "fpga_vcch";
+			regulator-min-microvolt = <1050000>;
+			regulator-max-microvolt = <1150000>;
+			regulator-boot-on;
+			regulator-always-on;
+			vin-supply = <&pmic_laser_reg>;
+		};
+	};
+};

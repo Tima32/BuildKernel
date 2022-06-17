@@ -1,0 +1,10 @@
+#
+# Probe device configuration
+#
+
+config GRIF_FPGA_IO 
+	tristate "Grif FPGA memory controller"
+	depends on GRIF_FPGA_MGR
+	help
+	  This enables the support for the grif FPGA memory controller that
+          provides access to FPGA control/status registers via char device

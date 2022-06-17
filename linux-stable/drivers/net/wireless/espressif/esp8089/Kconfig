@@ -1,0 +1,5 @@
+config ESP8089
+	tristate "Espressif ESP8089 support"
+	depends on MAC80211
+	help
+	  This adds support for Espressif ESP8089 WiFi module.

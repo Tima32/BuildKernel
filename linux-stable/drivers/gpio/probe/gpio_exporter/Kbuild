@@ -1,0 +1,11 @@
+# This Makefile-style file is included by kernel build system Kbuild. It
+# describes what modules have to be built and how to build them.
+
+# Drivers to build
+
+obj-$(CONFIG_GPIO_EXPORTER) += gpio_exporter.o
+gpio_exporter-objs := main.o
+
+# Turn off warning that produces a lot of false-positives. Maybe later we
+# should enable it and fix everything it will point us.
+subdir-ccflags-y := -Wno-sign-compare

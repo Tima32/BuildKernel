@@ -1,0 +1,6 @@
+config META_FPGA_MGR
+	tristate "Meta FPGA manager"
+	default m
+	help
+	  FPGA manager driver to parse FPGA features.
+

@@ -1,0 +1,262 @@
+#include <dt-bindings/leds/leds-pca9532.h>
+#include "socfpga_cyclone5_stcmtk.dtsi"
+
+
+/ {
+	aliases {
+		i2c2 = &sfp_mux_chan_0;
+		i2c3 = &sfp_mux_chan_1;
+		i2c4 = &sfp_mux_chan_2;
+		i2c5 = &sfp_mux_chan_3;
+	};
+
+	soc {
+		ethernet@ff702000 {
+			phy-mode = "rgmii";
+			txd0-skew-ps = <0>;
+			txd1-skew-ps = <0>;
+			txd2-skew-ps = <0>;
+			txd3-skew-ps = <0>;
+			rxd0-skew-ps = <420>;
+			rxd1-skew-ps = <420>;
+			rxd2-skew-ps = <420>;
+			rxd3-skew-ps = <420>;
+			txen-skew-ps = <0>;
+			txc-skew-ps = <1860>;
+			rxdv-skew-ps = <420>;
+			rxc-skew-ps = <1680>;
+			max-frame-size = <3800>;
+		};
+
+		i2c0: i2c@ffc04000 {
+			lm85: lm85@2d {
+				compatible = "national,adt7463";
+				reg = <0x2d>;
+				status = "okay";
+			};
+
+			pca0: pca9532@60 {
+				compatible = "nxp,pca9532";
+				gpio-controller;
+				#gpio-cells = <2>;
+				#address-cells = <1>;
+				#size-cells = <0>;
+				reg = <0x60>;
+				status = "okay";
+
+				green_led_0 {
+					label = "green0";
+					type = <PCA9532_TYPE_LED>;
+				};
+				green_led_1 {
+					label = "green1";
+					type = <PCA9532_TYPE_LED>;
+				};
+				green_led_2 {
+					label = "green2";
+					type = <PCA9532_TYPE_LED>;
+				};
+				green_led_3 {
+					label = "green3";
+					type = <PCA9532_TYPE_LED>;
+				};
+				green_led_4 {
+					label = "green4";
+					type = <PCA9532_TYPE_LED>;
+				};
+				green_led_5 {
+					label = "green5";
+					type = <PCA9532_TYPE_LED>;
+				};
+				green_led_6 {
+					label = "green6";
+					type = <PCA9532_TYPE_LED>;
+				};
+				green_led_7 {
+					label = "green7";
+					type = <PCA9532_TYPE_LED>;
+				};
+				red_led_0 {
+					label = "red0";
+					type = <PCA9532_TYPE_LED>;
+				};
+				red_led_1 {
+					label = "red1";
+					type = <PCA9532_TYPE_LED>;
+				};
+				red_led_2 {
+					label = "red2";
+					type = <PCA9532_TYPE_LED>;
+				};
+				red_led_3 {
+					label = "red3";
+					type = <PCA9532_TYPE_LED>;
+				};
+				red_led_4 {
+					label = "red4";
+					type = <PCA9532_TYPE_LED>;
+				};
+				red_led_5 {
+					label = "red5";
+					type = <PCA9532_TYPE_LED>;
+				};
+				red_led_6 {
+					label = "red6";
+					type = <PCA9532_TYPE_LED>;
+				};
+				red_led_7 {
+					label = "red7";
+					type = <PCA9532_TYPE_LED>;
+				};
+			};
+		
+			eeprom@53 {
+				compatible = "at,24c02";
+				reg = <0x53>;
+				status = "okay";
+			};
+		
+			expander: pca9535@20 {
+				compatible = "nxp,pca9535";
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x20>;
+				pinctrl-names = "default";
+				interrupt-parent = <&portb>;
+				interrupts = <19 IRQ_TYPE_LEVEL_LOW>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+			};
+
+			/* pinctrl-0 = <&soc_pca9535_pins>;*/
+			/*interrupt-parent = <&porta>;*/
+			/*interrupts = <&portc 8 2>;*/
+			/*nr-gpios = <16>;*/
+
+			i2c-switch@70 {
+				compatible = "nxp,pca9544";
+				#address-cells = <0x1>;
+				#size-cells = <0x0>;
+				reg = <0x70>;
+				i2c-mux-idle-disconnect;
+
+				/* The following two nodes describe I2C busses
+				* located behind the MUX on channels 0 and 1
+				* (indexed from 0).
+				*/
+				sfp_mux_chan_0: i2c@0 {
+					#address-cells = <0x1>;
+					#size-cells = <0x0>;
+					reg = <0>;
+				};
+
+				sfp_mux_chan_1: i2c@1 {
+					#address-cells = <0x1>;
+					#size-cells = <0x0>;
+					reg = <1>;
+				};
+
+				/* The following two nodes describe I2C mux
+				* channels 2 and 3 (indexed from 0) that have
+				* no devices connected to them.
+				*
+				* It would be great to disable them at all so
+				* that they would not appear in sysfs but we
+				* couldn't find an easy and obvious way to
+				* achieve this.
+				*/
+				sfp_mux_chan_2: i2c@2 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <2>;
+				};
+				sfp_mux_chan_3: i2c@3 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <3>;
+				};
+			};
+		};
+
+		i2c1: i2c@ffc05000 {
+			status = "okay";
+			scl-gpios = <&portb 23 GPIO_ACTIVE_HIGH>;
+			sda-gpios = <&portb 22 GPIO_ACTIVE_HIGH>;
+
+			battery@0x0b {
+				compatible = "ti,bq40z50";
+				reg = <0x0b>;
+			};
+
+			charger@0x09 {
+				compatible = "linear,ltc4100";
+				reg = <0x09>;
+			};
+
+			/*	battery: sbs-battery@b {
+					compatible = "sbs,sbs-battery";
+					reg = <0xb>;
+					sbs,poll-retry-count = <1>;
+					sbs,i2c-retry-count = <2>;
+				};*/
+
+				/*
+				* adjust the falling times to decrease the i2c frequency to 50Khz
+				* because the LCD module does not work at the standard 100Khz
+				*/
+				/*	i2c-sda-falling-time-ns = <1700>;
+					i2c-scl-falling-time-ns = <1300>;
+					i2c-sda-hold-time-ns = <2500>;*/
+		};
+
+		etn-port0 {
+			mac-address = [ 00 21 CE 07 00 01 ];
+			sgmii-support = <1>;
+			stcmtk,sfp-i2c-adapter = <&sfp_mux_chan_0>;
+			stcmtk,sfp-mod-abs-gpio = <&expander 2 GPIO_ACTIVE_LOW>;
+			stcmtk,sfp-tx-dis-gpio = <&expander 1 GPIO_ACTIVE_LOW>;
+		};
+
+		etn-port1 {
+			mac-address = [ 00 21 CE 07 00 02 ];
+			sgmii-support = <1>;
+			stcmtk,sfp-i2c-adapter = <&sfp_mux_chan_1>;
+			stcmtk,sfp-mod-abs-gpio = <&expander 10 GPIO_ACTIVE_LOW>;
+			stcmtk,sfp-tx-dis-gpio = <&expander 9 GPIO_ACTIVE_LOW>;
+		};
+	};
+	
+	gpio_keys {
+		compatible = "gpio-keys";
+
+		power_button {
+			label = "power_button";
+			gpios = <&portb 24 GPIO_ACTIVE_LOW>;
+			linux,code = <116>;
+			gpio-key,wakeup;
+		};
+
+		ltc4100_int {
+			label = "ltc4100_int";
+			gpios = <&portb 21 GPIO_ACTIVE_LOW>;
+			linux,code = <236>;
+			gpio-key,wakeup;
+		};
+	};
+
+	gpio_poweroff {
+		compatible = "gpio-poweroff";
+		gpios = <&portb 25 0>; /*gpio_54 for poweroff system*/
+	};
+	
+	spi3 {
+		compatible = "spi-gpio";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		gpio-sck = <&portb 28 0>;
+		gpio-mosi = <&portc 0 0>;
+		gpio-miso = <&portc 1 0>;
+		num-chipselects = <1>;
+		cs-gpios = <&portc 2 0>;
+	};
+};

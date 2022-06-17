@@ -1,0 +1,10 @@
+#
+#  SoC-based battery driver
+#
+
+config ETN_BAT
+        tristate "Etn battery driver"
+        default m
+        help
+            Driver controls power and battery.
+            Driver integrates in subsystem power_supply and polls battery controller.

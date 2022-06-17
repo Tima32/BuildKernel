@@ -1,0 +1,9 @@
+#
+# Probe device configuration
+#
+
+config GRIF_PHC
+	tristate "Probe FPGA-based PTP Hardware Clock (PHC) for Grif platform support"
+        depends on GRIF_FPGA_MGR
+	help
+	  This enables the support for the Probe FPGA-based PTP Hardware Clock (PHC) for Grif platform.

@@ -1,0 +1,10 @@
+#
+# SoC-based devices Fb
+#
+
+config ETN_FB
+        tristate "ETN Framebuffer driver"
+        depends on ETN_FPGA_MGR && ETN_IO && COMMON_FPGA_DRIVER
+        default m
+        help
+           Supports ETN Framebuffer.

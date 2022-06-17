@@ -1,0 +1,9 @@
+/dts-v1/;
+/plugin/;
+
+&{/fpga_region0} {
+	#address-cells = <1>;
+	#size-cells = <1>;
+
+	firmware-name = "evb.dat";
+};

@@ -1,0 +1,14 @@
+#
+# SoC-based devices FPGA manager
+#
+
+config ETN_FPGA_MGR
+        tristate "ETN FPGA manager"
+        help
+            etn_fpga_mgr - is an extension of Altera FPGA manager.
+            New features of ETN FPGA manager:
+                * FPGA features support
+                * Ref counting
+                * FPGA flasing at module load time
+                * Kernel API
+

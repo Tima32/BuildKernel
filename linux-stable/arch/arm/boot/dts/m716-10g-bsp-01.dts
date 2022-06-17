@@ -1,0 +1,287 @@
+/*
+ * Copyright Altera Corporation (C) 2012,2014. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "socfpga_cyclone5_stcmtk.dtsi"
+
+/ {
+	model = "ETLN-10G Ethernet tester/analyzer";
+
+	cpu-gpio {
+		compatible = "linux,gpio-exporter";
+		status = "okay";
+		exported-gpios = <&portb 19 GPIO_ACTIVE_HIGH>,
+			<&portb 27 GPIO_ACTIVE_HIGH>,
+			<&portb 22 GPIO_ACTIVE_HIGH>;
+		exported-gpio-names = "sfpp-pwr-en",
+			"devinfo-eeprom-write-protect",
+			"smbus-alert";
+		exported-gpio-directions = "high",
+			"high",
+			"in";
+	};
+
+	soc {
+		ethernet@ff702000 {
+			phy-mode = "rgmii-id";
+		};
+
+		i2c0: i2c@ffc04000 {
+			scl-gpios = <&portc 6 GPIO_ACTIVE_HIGH>;
+			sda-gpios = <&portc 5 GPIO_ACTIVE_HIGH>;
+
+			eeprom@53 {
+				compatible = "at,24c02";
+				reg = <0x53>;
+				status = "okay";
+			};
+
+			adc@48 {
+				compatible = "ti,ads7830";
+				reg = <0x48>;
+				status = "okay";
+			};
+
+			lm85: lm85@2d {
+				compatible = "national,lm85";
+				reg = <0x2d>;
+			};
+
+			expander: pca9535@20 {
+				compatible = "nxp,pca9535";
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x20>;
+				pinctrl-names = "default";
+				/*
+				interrupt-parent = <&portb>;
+				interrupts = <23 IRQ_TYPE_LEVEL_LOW>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				*/
+			};
+
+			i2c-switch@70 {
+				compatible = "nxp,pca9544";
+				#address-cells = <0x1>;
+				#size-cells = <0x0>;
+				reg = <0x70>;
+				i2c-mux-idle-disconnect;
+
+				/* The following two nodes describe I2C busses
+				* located behind the MUX on channels 0 and 1
+				* (indexed from 0).
+				*/
+				sfp_mux_chan_0: i2c@0 {
+					#address-cells = <0x1>;
+					#size-cells = <0x0>;
+					reg = <0>;
+				};
+
+				sfp_mux_chan_1: i2c@1 {
+					#address-cells = <0x1>;
+					#size-cells = <0x0>;
+					reg = <1>;
+				};
+
+				/* The following two nodes describe I2C mux
+				* channels 2 and 3 (indexed from 0) that have
+				* no devices connected to them.
+				*
+				* It would be great to disable them at all so
+				* that they would not appear in sysfs but we
+				* couldn't find an easy and obvious way to
+				* achieve this.
+				*/
+				sfp_mux_chan_2: i2c@2 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <2>;
+				};
+				sfp_mux_chan_3: i2c@3 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <3>;
+				};
+			};
+
+		};
+
+		i2c1: i2c@ffc05000 {
+			status = "disabled";
+		};
+
+		etn-port0 {
+			compatible = "stcmtk,etln-10g";
+			target-fpga = <&fpga>;
+			port-num = <0>;
+			phy-handle = <&mv_ch0>;
+			phy-mode = "xaui";
+			mac-address = [ 00 21 CE 01 00 01 ];
+		};
+
+		etn-port1 {
+			compatible = "stcmtk,etln-10g";
+			target-fpga = <&fpga>;
+			port-num = <1>;
+			phy-handle = <&mv_ch2>;
+			phy-mode = "xaui";
+			mac-address = [ 00 21 CE 01 00 02 ];
+		};
+
+		etn-phc@0 {
+			reg = <0xc0020000 36>;
+		};
+
+		etn-phc@1 {
+			reg = <0xc0020080 36>;
+		};
+
+		etn-phc-mux {
+			reg = <0xc0020100 4>;
+		};
+	};
+
+
+/*	etn-port0 {
+		mac-address = [ 00 21 CE 01 00 01];
+		compatible = "ethernet-phy-ieee802.3-c45";
+		stcmtk,sfp-i2c-adapter = <&sfp_mux_chan_0>;
+		stcmtk,sfp-mod-abs-gpio = <&expander 2 GPIO_ACTIVE_LOW>;
+		stcmtk,sfp-tx-dis-gpio = <&expander 1 GPIO_ACTIVE_LOW>;
+	};
+
+	etn-port1 {
+		mac-address = [ 00 21 CE 01 00 02];
+		compatible = "ethernet-phy-ieee802.3-c45";
+		stcmtk,sfp-i2c-adapter = <&sfp_mux_chan_1>;
+		stcmtk,sfp-mod-abs-gpio = <&expander 10 GPIO_ACTIVE_LOW>;
+		stcmtk,sfp-tx-dis-gpio = <&expander 9 GPIO_ACTIVE_LOW>;
+	};
+
+	etn-port2 {
+		mac-address = [ 00 21 CE 01 00 03];
+		compatible = "ethernet-phy-ieee802.3-c45";
+		stcmtk,sfp-i2c-adapter = <&sfp_mux_chan_2>;
+		stcmtk,sfp-mod-abs-gpio = <&expander 2 GPIO_ACTIVE_LOW>;
+		stcmtk,sfp-tx-dis-gpio = <&expander 1 GPIO_ACTIVE_LOW>;
+	};
+
+	etn-port3 {
+		mac-address = [ 00 21 CE 01 00 04];
+		compatible = "ethernet-phy-ieee802.3-c45";
+		stcmtk,sfp-i2c-adapter = <&sfp_mux_chan_3>;
+		stcmtk,sfp-mod-abs-gpio = <&expander 10 GPIO_ACTIVE_LOW>;
+		stcmtk,sfp-tx-dis-gpio = <&expander 9 GPIO_ACTIVE_LOW>;
+	};*/
+
+	leds-hps {
+		compatible = "gpio-leds";
+		hps0 {
+			label = "status_led";
+			gpios = <&portb 6 0>;
+			linux,default-trigger = "default-on";
+		};
+		hps1 {
+			label = "stat_red";
+			gpios = <&porta 9 0>;
+			default-state = "off";
+			linux,default-trigger = "none";
+		};
+		hps2 {
+			label = "stat_green";
+			gpios = <&portb 12 1>;
+			default-state = "off";
+			linux,default-trigger = "heartbeat";
+		};
+	};
+
+	gpio_keys {
+		compatible = "gpio-keys";
+		user_button {
+			label = "user_button";
+			gpios = <&portb 8 GPIO_ACTIVE_LOW>;
+			linux,code = <2>;
+			gpio-key,wakeup;
+		};
+	};
+
+	sfp_eth0: sfp-eth0 {
+		compatible = "sff,sfp";
+		i2c-bus = <&sfp_mux_chan_0>;
+		pinctrl-names = "default";
+		mod-def0-gpios = <&expander 10 GPIO_ACTIVE_LOW>;
+		tx-disable-gpios = <&expander 9 GPIO_ACTIVE_HIGH>;
+		tx-fault-gpios  = <&expander 8 GPIO_ACTIVE_HIGH>;
+		los-gpios = <&expander 12 GPIO_ACTIVE_HIGH>;
+	};
+
+	sfp_eth1: sfp-eth1 {
+		compatible = "sff,sfp";
+		i2c-bus = <&sfp_mux_chan_1>;
+		pinctrl-names = "default";
+		mod-def0-gpios = <&expander 2 GPIO_ACTIVE_LOW>;
+		tx-disable-gpios = <&expander 1 GPIO_ACTIVE_HIGH>;
+		tx-fault-gpios  = <&expander 0 GPIO_ACTIVE_HIGH>;
+		los-gpios = <&expander 4 GPIO_ACTIVE_HIGH>;
+	};
+
+	mdio0: mdio-0 {
+		compatible = "stcmtk,et-10g-mdio";
+		target-fpga = <&fpga>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "okay";
+
+		mv_ch0:88X2222@0 {
+			compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45";
+			reg = <0x0>;
+			phy-mode = "xgmii";
+			mv,line-mode = "KR";
+			mv,host-mode = "KX4";
+			sfp = <&sfp_eth0>;
+			status = "okay";
+		};
+
+		mv_ch1:88X2222@1 {
+			compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45";
+			reg = <0x1>;
+			phy-mode = "xgmii";
+			mv,line-mode = "KR";
+			mv,host-mode = "KX4";
+			status = "disabled";
+		};
+
+		mv_ch2:88X2222@2 {
+			compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45";
+			reg = <0x2>;
+			phy-mode = "xgmii";
+			mv,line-mode = "KR";
+			mv,host-mode = "KX4";
+			sfp = <&sfp_eth1>;
+			status = "okay";
+		};
+
+		mv_ch3:88X2222@3 {
+			compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45";
+			reg = <0x3>;
+			phy-mode = "xgmii";
+			mv,line-mode = "KR";
+			mv,host-mode = "KX4";
+			status = "disabled";
+		};
+
+	};
+};

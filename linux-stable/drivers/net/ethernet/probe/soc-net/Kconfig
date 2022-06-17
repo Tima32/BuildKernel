@@ -1,0 +1,16 @@
+config SOC_NET
+	tristate "Probe FPGA-based NIC for SOC-based devices"
+	depends on ETN_FPGA_MGR
+	default m
+	select PHYLINK
+	help
+	  This enables the support for the Probe FPGA-based NIC for
+	  SOC-based devices.
+
+config SOC_MDIO
+	tristate "Probe FPGA-based MDIO bus for SOC-based devices"
+	depends on ETN_FPGA_MGR
+	default m
+	help
+	  This enables the support for the Probe FPGA-based MDIO bus
+	  for SOC-based devices.

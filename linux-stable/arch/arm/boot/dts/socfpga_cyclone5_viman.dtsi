@@ -1,0 +1,160 @@
+/*
+ * Copyright Altera Corporation (C) 2012,2014. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "socfpga_cyclone5.dtsi"
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	model = "Metrotek Viman SOCFPGA Cyclone V SoC Board";
+	compatible = "altr,socfpga-cyclone5", "altr,socfpga";
+
+	chosen {
+		bootargs = "console=ttyS0,115200";
+	};
+
+	memory {
+		name = "memory";
+		device_type = "memory";
+		reg = <0x0 0x20000000>; /* 512 MB */
+	};
+
+	aliases {
+		/* This code makes i2c busses appear in sysfs numbered in a
+		 * predictable and strict order */
+		i2c0 = &i2c0;
+		i2c1 = &i2c1;
+	};
+
+	regulator_3_3v: 3-3-v-regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "3.3V";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		sync {
+			label = "sync";
+			gpios = <&portb 15 1>; /* Active low */
+			linux,default-trigger = "none";
+		};
+
+		status {
+			label = "status";
+			gpios = <&portb 23 1>;
+			default-state = "on";
+		};
+
+	};
+
+	soc {
+		gpio0: gpio@ff708000 {
+			status = "okay";
+		};
+
+		gpio1: gpio@ff709000 {
+			status = "okay";
+		};
+
+		gpio2: gpio@ff70a000 {
+			status = "okay";
+		};
+
+		i2c0: i2c@ffc04000 {
+			status = "okay";
+			i2c-sda-falling-time-ns = <5000>;
+			i2c-scl-falling-time-ns = <5000>;
+
+			rtc@68 {
+				compatible = "dallas,ds1340";
+				reg = <0x68>;
+				status = "okay";
+			};
+
+			eeprom@50 {
+				compatible = "at,24c02";
+				reg = <0x50>;
+				status = "okay";
+			};
+		};
+
+		i2c1: i2c@ffc05000 {
+			status = "disabled";
+		};
+
+		pmu {
+			cti0: cti0@ff118000 {
+				status="okay";
+			};
+
+			cti1: cti1@ff119000 {
+				status="okay";
+			};
+		};
+
+		fpga {
+			compatible = "mtk,etn";
+			interrupts = <0x0 0x28 0x1>;
+			mac-address = [ 00 21 CE 00 00 01 ];
+		};
+
+		hps_0_fpgamgr: fpgamgr@0xff706000 {
+				 status = "disabled";
+		};
+
+		fpgamgr {
+			compatible = "etn,fpga-mgr";
+			transport = "mmio";
+			reg = <0xff706000 0x1000 0xffb90000 0x1000>;
+			interrupts = <0x0 0xaf 0x4>;
+		};
+
+	};
+};
+
+&spi0 {
+	status = "okay";
+	#address-cells = <0x1>;
+	#size-cells = <0x0>;
+
+	w5100_spi@0 {
+		compatible = "w5100_spi";
+		spi-max-frequency = <10000000>;
+		mac-address = [ 00 21 CE 02 00 03 ];
+		reg = <0x0>;
+		interrupt-parent = <&portb>;
+		interrupts = <25 0x2>;
+		reset-gpios = <&portc 7 0>;
+	};
+};
+
+&mmc0 {
+/*	cd-gpios = <&portb 18 0>;*/
+	vmmc-supply = <&regulator_3_3v>;
+	vqmmc-supply = <&regulator_3_3v>;
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&usb1 {
+	status = "okay";
+};

@@ -1,0 +1,16 @@
+#
+# Probe Etn fan driver
+#
+
+config ETN_FAN
+        tristate "Etn driver for fan"
+        depends on ETN_FPGA_MGR && ETN_IO
+        default m
+        help
+            Driver to control fan. 
+            It provides hwmon device in userspace to control fan.
+            At this moment FPGA supports 4 modes:
+                1) Off
+                2) 30%
+                3) 60%
+                4) 100%

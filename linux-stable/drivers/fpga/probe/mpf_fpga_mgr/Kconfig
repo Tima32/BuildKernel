@@ -1,0 +1,9 @@
+config FPGA_MGR_MPF_SPI
+	tristate "Microchip Polarfire SPI FPGA manager"
+	depends on SPI
+	default m
+	help
+	  FPGA manager driver support for Microchip Polarfire FPGAs
+	  programming over slave SPI interface with .dat formatted
+	  bitstream image.
+

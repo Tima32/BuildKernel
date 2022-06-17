@@ -1,0 +1,56 @@
+ETN I/O access to FPGA register
+===============================
+
+IMPORTANT: this (and every other driver) assumes that FPGA register size is 16
+bit, so sometimes you may see magic "2 *" parts.
+
+This driver implements char device (actually, miscdevice) interface to FPGA
+registers.
+
+There is an interface called HPS-to-FPGA, that are mapped on address range
+<0xc0000000, 0xc0000000 + 0x3ffff>. FPGA exports its registers on this interface
+so we can access it by simply reading/writing to the memory. While it can be
+done by simply opening /dev/mem and read/write to the raw memory, we provide
+more convenient interface.
+
+etn_io requests memory range for that interface and maps it with ioremap. Though
+not a full range mapped - only 0xffff bytes.
+
+Since version 2.0.0 etn_io uses the kernel "regmap" API to access FPGA regs. The "regmap"
+structure for SoC FPGA is allocated in etn-fpga-mgr driver. etn_io uses a special function
+to get allocated regmap structure pointer.
+
+We also map Lightweight HPS-to-FPGA interface, though we don't use it.
+
+libfpgaio and file_operations
+-----------------------------
+
+file_operations callbacks are quite simple:
+
+* etn_open just saves references
+* etn_release does nothing
+* etn_llseek moves pointer of char device
+* etn_read reads from device pointer by a single bytes.
+* etn_write write to device pointer by a single bytes.
+
+Device tree node
+----------------
+
+```
+fpga-io {
+	compatible = "stcmtk,etn-io";
+	target-fpga = <&fpga>;
+};
+```
+
+Where "target-fpga" is a phandle to an "fpga" node which registers we need to read/write.
+
+Authors
+-------
+
+STC Metrotek System Team <system@metrotek.ru>
+
+Date
+----
+
+Wed, 04 Mar 2020 18:31:29 +0300

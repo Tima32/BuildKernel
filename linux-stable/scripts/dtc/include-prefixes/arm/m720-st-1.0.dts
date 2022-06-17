@@ -1,0 +1,467 @@
+/*
+ * Copyright (C) 2016 Freescale Semiconductor, Inc.
+ * Copyright 2017 NXP
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+
+/dts-v1/;
+
+#include "imx6ull.dtsi"
+
+/ {
+	model = "M720 SmartSFP Service Tool";
+	compatible = "stcmtk,ssfp-st", "fsl,imx6ull";
+
+	chosen {
+		stdout-path = &uart1;
+	};
+
+	memory {
+		reg = <0x80000000 0x20000000>;
+	};
+
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		linux,cma {
+			compatible = "shared-dma-pool";
+			reusable;
+			size = <0x6000000>;
+			linux,cma-default;
+		};
+	};
+
+	regulators {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		reg_vref_adc: vref_adc@1 {
+			compatible = "regulator-fixed";
+			regulator-name = "adc_ref_stub";
+			regulator-min-microvolt = <3300000>;
+			regulator-max-microvolt = <3300000>;
+			regulator-always-on;
+		};
+
+		reg_usbotg1_vbus: reg@2 {
+			compatible = "regulator-fixed";
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_usbotg1_pwr>;
+			regulator-name = "usb1_pwr_reg";
+			regulator-min-microvolt = <5000000>;
+			regulator-max-microvolt = <5000000>;
+			enable-active-high;
+			gpio = <&gpio1 4 GPIO_ACTIVE_HIGH>;
+		};
+
+		reg_usbotg2_vbus: reg@3 {
+			compatible = "regulator-fixed";
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_usbotg2_pwr>;
+			regulator-name = "usb2_pwr_reg";
+			regulator-min-microvolt = <5000000>;
+			regulator-max-microvolt = <5000000>;
+			enable-active-high;
+			gpio = <&gpio1 2 GPIO_ACTIVE_HIGH>;
+		};
+
+		reg_dvfs: reg@4 {
+			compatible = "regulator-gpio";
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_dvfs>;
+			regulator-name = "cpu_soc_in_reg";
+			regulator-type = "voltage";
+			regulator-min-microvolt = <1300000>;
+			regulator-max-microvolt = <1400000>;
+			gpios = <&gpio5 3 GPIO_ACTIVE_HIGH>;
+			states = <1300000 0x1
+			          1400000 0x0>;
+		};
+	};
+
+	cpu-leds {
+		compatible = "gpio-leds";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_leds>;
+
+		green {
+			label = "status";
+			linux,default-trigger = "heartbeat";
+			gpios = <&gpio4 28 GPIO_ACTIVE_HIGH>;
+			default-state = "keep";
+		};
+
+		red {
+			label = "alarm";
+			linux,default-trigger = "none";
+			gpios = <&gpio4 24 GPIO_ACTIVE_HIGH>;
+			panic-indicator;
+			default-state = "off";
+		};
+	};
+
+	cpu-gpio {
+		compatible = "linux,gpio-exporter";
+		status = "okay";
+		exported-gpios = <&gpio4 3 GPIO_ACTIVE_HIGH>,
+				 <&gpio4 4 GPIO_ACTIVE_HIGH>,
+				 <&gpio4 7 GPIO_ACTIVE_HIGH>,
+				 <&gpio4 8 GPIO_ACTIVE_HIGH>,
+				 <&gpio4 9 GPIO_ACTIVE_HIGH>,
+				 <&gpio4 10 GPIO_ACTIVE_HIGH>,
+				 <&gpio4 14 GPIO_ACTIVE_HIGH>,
+				 <&gpio4 15 GPIO_ACTIVE_HIGH>;
+		exported-gpio-names = "cpu-sfp-off",
+				      "sfp-mod-abs",
+				      "cpu-tx-dis",
+				      "cpu-tx-fault",
+				      "cpu-rx-los",
+				      "cpu-ssfp-boot-mode",
+				      "cpu-rate-sel",
+				      "cpu-lb-disable";
+		exported-gpio-directions = "low",
+					   "in",
+					   "in",
+					   "in",
+					   "in",
+					   "high",
+					   "high",
+					   "low";
+	};
+
+	nxrt15xh103 {
+		/* using same charactersics ntc thermistor */
+		compatible = "murata,ncp15xh103";
+		pullup-uv = <3300000>;
+		pullup-ohm = <10000>;
+		pulldown-ohm = <0>;
+		io-channels = <&adc1 5>;
+	};
+};
+
+&cpu0 {
+	operating-points = <
+		/* kHz	uV */
+		900000	1275000
+		792000	1225000
+		528000	1175000
+		396000	1025000
+		198000	950000
+	>;
+	/* https://source.codeaurora.org/external/imx/linux-imx/commit/?h=imx_4.14.62_1.0.0_beta&id=214d3ff7901992abfab7c55e169ad1a911119732 */
+	fsl,soc-operating-points = <
+		/* KHz	uV */
+		900000	1250000
+		792000	1175000
+		528000	1175000
+		396000	1175000
+		198000	1175000
+	>;
+	fsl,arm-soc-shared = <0>;
+	dc-supply = <&reg_dvfs>;
+	clock-frequency = <900000000>;
+};
+
+&fec1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_enet1 &pinctrl_ethphy0 &pinctrl_mdio0>;
+	phy-mode = "rmii";
+	phy-handle = <&ethphy0>;
+	phy-reset-gpios = <&gpio1 22 GPIO_ACTIVE_HIGH>;
+	local-mac-address = [00 21 ce 40 00 01];
+	status = "okay";
+
+	mdio {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		ethphy0: ethernet-phy@0 {
+			compatible = "ethernet-phy-ieee802.3-c22";
+			clocks = <&clks IMX6UL_CLK_ENET_REF>;
+			clock-names = "rmii-ref";
+			interrupt-parent = <&gpio1>;
+			interrupts = <26 IRQ_TYPE_EDGE_FALLING>;
+			reg = <0>;
+		/*	reset-gpios = <&gpio1 22 GPIO_ACTIVE_HIGH>; */
+			max-speed = <100>;
+		};
+	};
+};
+
+&gpc {
+	fsl,cpu_pupscr_sw2iso = <0xf>;
+	fsl,cpu_pupscr_sw = <0x0>;
+	fsl,cpu_pdnscr_iso2sw = <0x1>;
+	fsl,cpu_pdnscr_iso = <0x1>;
+	fsl,ldo-bypass = <0>; /* DCDC, ldo-enable */
+};
+
+&i2c1 {
+	clock-frequency = <400000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_i2c1>;
+	status = "okay";
+
+	devinfo@57 {
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_eeprom1>;
+		compatible = "atmel,24c02";
+		reg = <0x57>;
+		pagesize = <16>;
+	};
+};
+
+&i2c2 {
+	clock-frequency = <400000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_i2c2>;
+	status = "okay";
+
+	power_monitor@40 {
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_ina226>;
+		compatible = "ti,ina226";
+		reg = <0x40>;
+		shunt-resistor = <20000>; /* R13=0.02 Ohm */
+	};
+};
+
+&i2c3 {
+	clock-frequency = <100000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_i2c3>;
+	status = "okay";
+};
+
+&iomuxc {
+	pinctrl_export: grp-1 {
+		fsl,pins = <
+			MX6UL_PAD_NAND_DATA01__GPIO4_IO03 0x000010B0 /* CPU_SFP_OFF */
+			MX6UL_PAD_NAND_DATA02__GPIO4_IO04 0x000010B0 /* SFP_MOD_ABS */
+			MX6UL_PAD_NAND_DATA05__GPIO4_IO07 0x000010B0 /* CPU_TX_DIS */
+			MX6UL_PAD_NAND_DATA06__GPIO4_IO08 0x000010B0 /* CPU_TX_FAULT */
+			MX6UL_PAD_NAND_DATA07__GPIO4_IO09 0x000010B0 /* CPU_RX_LOS */
+			MX6UL_PAD_NAND_ALE__GPIO4_IO10    0x000010B0 /* CPU_SSFP_BOOT_MODE */
+			MX6UL_PAD_NAND_CE1_B__GPIO4_IO14  0x000010B0 /* CPU_RATE_SEL */
+			MX6UL_PAD_NAND_CLE__GPIO4_IO15    0x000010B0 /* CPU_LB_DISABLE */
+		>;
+	};
+
+	pinctrl_leds: leds_grp {
+		fsl,pins = <
+			MX6UL_PAD_CSI_DATA03__GPIO4_IO24 0x000010B0 /* CPU_LED_RED */
+			MX6UL_PAD_CSI_DATA07__GPIO4_IO28 0x000010B0 /* CPU_LED_GRN */
+		>;
+	};
+
+	pinctrl_adc1: adc1grp {
+		fsl,pins = <
+			MX6UL_PAD_GPIO1_IO05__GPIO1_IO05 0x000000B0
+		>;
+	};
+
+	pinctrl_enet1: enet1grp {
+		fsl,pins = <
+			MX6UL_PAD_ENET1_RX_DATA0__ENET1_RDATA00 0x0001B0B0
+			MX6UL_PAD_ENET1_RX_DATA1__ENET1_RDATA01 0x0001B0B0
+			MX6UL_PAD_ENET1_RX_EN__ENET1_RX_EN      0x0001B0B0
+			MX6UL_PAD_ENET1_RX_ER__ENET1_RX_ER      0x0001B0B0
+			MX6UL_PAD_ENET1_TX_CLK__ENET1_REF_CLK1  0x400010A9
+			MX6UL_PAD_ENET1_TX_DATA0__ENET1_TDATA00 0x0001B0B0
+			MX6UL_PAD_ENET1_TX_DATA1__ENET1_TDATA01 0x0001B0B0
+			MX6UL_PAD_ENET1_TX_EN__ENET1_TX_EN      0x0001B0B0
+		>;
+	};
+
+	pinctrl_mdio0: mdio0grp {
+		fsl,pins = <
+			MX6UL_PAD_GPIO1_IO07__ENET1_MDC  0x0001B0B0
+			MX6UL_PAD_GPIO1_IO06__ENET1_MDIO 0x0001F829
+		>;
+	};
+
+	pinctrl_ethphy0: ethphy0grp {
+		fsl,pins = <
+			/* ETH 10/100 PHY (D2, Micrel KSZ8081RNB) RESET */
+			MX6UL_PAD_UART2_CTS_B__GPIO1_IO22 0x000010B0 /* PHY_nRST */
+			MX6UL_PAD_UART3_CTS_B__GPIO1_IO26 0x000010B0 /* PHY_nINT */
+		>;
+	};
+
+	pinctrl_eeprom1: eeprom1grp {
+		fsl,pins = <
+			/*
+			 * EEPROM write protect
+			 *
+			 * this pin is not consumed by the eeprom driver,
+			 * but we can use it from userspace
+			 */
+			MX6UL_PAD_NAND_READY_B__GPIO4_IO12 0x000010B0
+		>;
+	};
+
+	pinctrl_wdog: wdoggrp {
+		fsl,pins = <
+			MX6UL_PAD_LCD_RESET__WDOG1_WDOG_ANY 0x000030B0
+		>;
+	};
+
+	pinctrl_i2c1: i2c1grp {
+		fsl,pins = <
+			MX6UL_PAD_UART4_RX_DATA__I2C1_SDA 0x4001B8B1
+			MX6UL_PAD_UART4_TX_DATA__I2C1_SCL 0x4001B8B1
+		>;
+	};
+
+	pinctrl_i2c2: i2c2grp {
+		fsl,pins = <
+			MX6UL_PAD_UART5_RX_DATA__I2C2_SDA 0x4001B8B1
+			MX6UL_PAD_UART5_TX_DATA__I2C2_SCL 0x4001B8B1
+		>;
+	};
+
+	pinctrl_i2c3: i2c3grp {
+		fsl,pins = <
+			MX6UL_PAD_ENET2_RX_DATA0__I2C3_SCL 0x4001B8B1
+			MX6UL_PAD_ENET2_RX_DATA1__I2C3_SDA 0x4001B8B1
+		>;
+	};
+
+	pinctrl_ina226: ina226grp {
+		fsl,pins = <
+			MX6UL_PAD_ENET2_TX_CLK__GPIO2_IO14 0x000010B0 /* alarm */
+		>;
+	};
+
+	/* System console */
+	pinctrl_uart1: uart1grp {
+		fsl,pins = <
+			MX6UL_PAD_UART1_RX_DATA__UART1_DCE_RX 0x0001B0B1
+			MX6UL_PAD_UART1_TX_DATA__UART1_DCE_TX 0x0001B0B1
+		>;
+	};
+
+	/* SmartSFP device console */
+	pinctrl_uart2: uart2grp {
+		fsl,pins = <
+			MX6UL_PAD_UART2_RX_DATA__UART2_DCE_RX 0x0001B0B1
+			MX6UL_PAD_UART2_TX_DATA__UART2_DCE_TX 0x0001B0B1
+		>;
+	};
+
+	pinctrl_usdhc1: usdhc1grp {
+		fsl,pins = <
+			MX6UL_PAD_SD1_CLK__USDHC1_CLK     0x00017059
+			MX6UL_PAD_SD1_CMD__USDHC1_CMD     0x00010059
+			MX6UL_PAD_SD1_DATA0__USDHC1_DATA0 0x00017059
+			MX6UL_PAD_SD1_DATA1__USDHC1_DATA1 0x00017059
+			MX6UL_PAD_SD1_DATA2__USDHC1_DATA2 0x00017059
+			MX6UL_PAD_SD1_DATA3__USDHC1_DATA3 0x00017059
+		>;
+	};
+
+	pinctrl_usbotg1: usbotg1grp {
+		fsl,pins = <
+			MX6UL_PAD_GPIO1_IO00__ANATOP_OTG1_ID 0x00017059
+			MX6UL_PAD_GPIO1_IO01__USB_OTG1_OC    0x000010B0
+			/* MX6UL_PAD_GPIO1_IO04__USB_OTG1_PWR 0x000010B0 */
+		>;
+	};
+
+	pinctrl_usbotg1_pwr: usbotgpwr1grp {
+		fsl,pins = <
+			MX6UL_PAD_GPIO1_IO04__GPIO1_IO04 0x000010B0
+		>;
+	};
+
+	pinctrl_usbotg2: usbotg2grp {
+		fsl,pins = <
+			MX6UL_PAD_GPIO1_IO03__USB_OTG2_OC 0x000010B0
+			/* MX6UL_PAD_GPIO1_IO02__USB_OTG2_PWR 0x000010B0 */
+		>;
+	};
+
+	pinctrl_usbotg2_pwr: usbotgpwr2grp {
+		fsl,pins = <
+			MX6UL_PAD_GPIO1_IO02__GPIO1_IO02 0x000010B0
+		>;
+	};
+};
+
+&iomuxc_snvs {
+	pinctrl_dvfs: dvfsgrp {
+		fsl,pins = <
+			/* GPIO_DVFS */
+			MX6UL_PAD_SNVS_TAMPER3__GPIO5_IO03 0x000110A0
+		>;
+	};
+};
+
+&adc1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_adc1>;
+	vref-supply = <&reg_vref_adc>;
+	num-channels = <6>;
+	status = "okay";
+	#io-channel-cells = <1>;
+};
+
+/* System console */
+&uart1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_uart1>;
+	status = "okay";
+};
+
+/* SmartSFP device console */
+&uart2 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_uart2>;
+	status = "okay";
+};
+
+&usbotg1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_usbotg1>;
+	vbus-supply = <&reg_usbotg1_vbus>;
+	dr_mode = "otg";
+	srp-disable;
+	hnp-disable;
+	adp-disable;
+	status = "okay";
+	disable-overcurrent;
+};
+
+&usbotg2 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_usbotg2>;
+	vbus-supply = <&reg_usbotg2_vbus>;
+	dr_mode = "host";
+	status = "okay";
+	disable-overcurrent;
+};
+
+&usdhc1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_usdhc1>;
+	bus-width = <4>;
+	no-1-8-v;
+	broken-cd;
+	status = "okay";
+};
+
+&wdog1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_wdog>;
+	/*
+	 *  Enable WDOG1_B and WDOG1_ANY external signals assertion on wdog1
+	 *  timeout.
+	 */
+	fsl,ext-reset-output;
+};

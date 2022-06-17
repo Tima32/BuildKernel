@@ -1,0 +1,9 @@
+#
+# Probe device configuration
+#
+
+config GRIF_PHC_MUX
+	tristate "Probe FPGA-based PHC multiplexor for Grif platform support"
+        depends on GRIF_FPGA_MGR
+	help
+	  This enables the support for the Probe FPGA-based PHC multiplexor for Grif platform.

@@ -1,0 +1,13 @@
+config SENSORS_PROBE_LM85
+	tristate "National Semiconductor LM85 and compatibles (extended ADT7463)"
+	depends on I2C
+	select HWMON_VID
+	help
+	  If you say yes here you get support for National Semiconductor LM85
+	  sensor chips and clones: ADM1027, ADT7463, ADT7468, EMC6D100,
+	  EMC6D101, EMC6D102, and EMC6D103.
+
+	  With extensions for ADT7463.
+
+	  This driver can also be built as a module.  If so, the module
+	  will be called probe-lm85.

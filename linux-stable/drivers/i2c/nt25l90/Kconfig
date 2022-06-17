@@ -1,0 +1,7 @@
+#
+# Probe NT25L90 driver
+#
+
+config NT25L90_OPTICAL_DRIVER
+        tristate "nt25l90 driver module"
+        default m

@@ -1,0 +1,13 @@
+#
+# SoC-based devices I/O access to FPGA reg
+#
+
+config ETN_IO
+        tristate "ETN IO driver"
+        depends on ETN_FPGA_MGR && COMMON_FPGA_DRIVER
+        default m
+        help
+            ETN I/O access to FPGA register.
+            This driver implements char device (actually, miscdevice) interface to FPGA
+            registers.
+

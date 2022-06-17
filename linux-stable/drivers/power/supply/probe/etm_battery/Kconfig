@@ -1,0 +1,4 @@
+config ETM_BATTERY
+        tristate "ET-mini ADC battery driver"
+        help
+          Battery driver for ETM device

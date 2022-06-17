@@ -1,0 +1,4 @@
+1. Probably, statically allocated feature kobjects can cause problems if module
+   is unloaded when userland is holding some of its attribute files open. (Or
+   when reading from it). Find out how userspace can effect kobject reference
+   counts. (See features_sysfs.c)

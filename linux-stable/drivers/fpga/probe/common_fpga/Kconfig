@@ -1,0 +1,5 @@
+config COMMON_FPGA_DRIVER
+	tristate "Probe common fpga"
+	default m
+	help
+	  This enables the support for working with FPGA features for different platforms

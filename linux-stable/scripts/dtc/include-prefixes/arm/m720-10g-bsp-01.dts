@@ -1,0 +1,265 @@
+#include "m720-10g.dtsi"
+
+/ {
+	model = "M720 SmartSFP 10G EVB";
+
+	cpu-gpio {
+		compatible = "linux,gpio-exporter";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_eeprom &pinctrl_userswitch>;
+		status = "okay";
+		exported-gpios = <&gpio3 12 GPIO_ACTIVE_HIGH>,
+				 <&gpio3 13 GPIO_ACTIVE_HIGH>,
+				 <&gpio1  9 GPIO_ACTIVE_HIGH>,
+				 <&gpio3 15 GPIO_ACTIVE_LOW>,
+				 <&gpio3 16 GPIO_ACTIVE_LOW>;
+		exported-gpio-names = "host-eeprom-write-protect",
+				      "host-eeprom-address-select",
+				      "devinfo-eeprom-write-protect",
+				      "user-set0",
+				      "user-set1";
+		exported-gpio-directions = "high", "low", "high", "in", "in";
+	};
+
+	host-gpio {
+		compatible = "linux,gpio-exporter";
+		status = "okay";
+		exported-gpios = <&fpga_gpio 0 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 1 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 2 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 3 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 4 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 5 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 6 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 7 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 8 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 9 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 10 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 11 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 12 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 13 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 14 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 15 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 16 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 17 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 18 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 19 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 20 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 21 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 22 GPIO_ACTIVE_HIGH>,
+				 <&fpga_gpio 23 GPIO_ACTIVE_HIGH>;
+		exported-gpio-names = "rx-los",
+				      "rx-los-ctrl",
+				      "tx-flt",
+				      "tx-flt-ctrl",
+				      "tx-dis-ctrl",
+				      "tx-dis",
+				      "mod-abs",
+				      "rs0",
+				      "rs1",
+				      "mod-abs-a",
+				      "rs0-a",
+				      "rs1-a",
+				      "rx-los-a",
+				      "tx-dis-a",
+				      "tx-flt-a",
+				      "mod-abs-c",
+				      "rs0-c",
+				      "rs1-c",
+				      "rx-los-c",
+				      "tx-dis-c",
+				      "tx-flt-c",
+				      "rx-los-b",
+				      "tx-dis-b",
+				      "tx-flt-b";
+		exported-gpio-directions = "low",
+					   "low",
+					   "low",
+					   "low",
+					   "low",
+					   "low",
+					   "in",
+					   "in",
+					   "in",
+					   "in",
+					   "in",
+					   "in",
+					   "in",
+					   "in",
+					   "in",
+					   "in",
+					   "in",
+					   "in",
+					   "in",
+					   "in",
+					   "in",
+					   "in",
+					   "in",
+					   "in";
+	};
+
+	fpga_gpio: fpga-gpio {
+		compatible = "stcmtk,grif-gpio-expander";
+		target-fpga = <&meta_fpga>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-line-names = "rx-los",
+				  "rx-los-ctrl",
+				  "tx-flt",
+				  "tx-flt-ctrl",
+				  "tx-dis-ctrl",
+				  "tx-dis",
+				  "mod-abs",
+				  "rs0",
+				  "rs1",
+				  "mod-abs-a",
+				  "rs0-a",
+				  "rs1-a",
+				  "rx-los-a",
+				  "tx-dis-a",
+				  "tx-flt-a",
+				  "mod-abs-c",
+				  "rs0-c",
+				  "rs1-c",
+				  "rx-los-c",
+				  "tx-dis-c",
+				  "tx-flt-c",
+				  "rx-los-b",
+				  "tx-dis-b",
+				  "tx-flt-b";
+	};
+
+	fpga-io {
+		compatible = "stcmtk,grif-io";
+		target-fpga = <&meta_fpga>;
+		status = "okay";
+	};
+
+	phc_mux: grif-phc-mux {
+                compatible = "stcmtk,phc-mux";
+                target-fpga = <&meta_fpga>;
+        };
+};
+
+&i2c3 {
+	/* device info EEPROM */
+	devinfo@56 {
+		compatible = "microchip,24c02", "at24";
+		vin-supply = <&pmic_io_reg>;
+		reg = <0x56>;
+		pagesize = <8>;
+	};
+};
+
+&i2c4 {
+	nt25l90_device@54 {
+		compatible = "linux,nt25l90";
+		status = "okay";
+		reg = <0x54>;
+	};
+
+	meta_fpga: meta_fpga_mgr@3a {
+		reg = <0x3a>;
+		compatible = "stcmtk,m720-10g-meta-fpga-mgr";
+		fpga-mgr = <&mpf_fpga_mgr>;
+		status = "okay";
+	};
+};
+
+&iomuxc {
+	stcmtk-smart-sfp {
+		pinctrl_eeprom: eepromgrp {
+			fsl,pins = <
+				MX6UL_PAD_LCD_DATA07__GPIO3_IO12 0x000018B0 /*nWP_EEP,Host EEPROM write protect */
+				MX6UL_PAD_GPIO1_IO09__GPIO1_IO09 0x000018B0 /* Device info EEPROM write protect*/
+				MX6UL_PAD_LCD_DATA08__GPIO3_IO13 0x000010B0 /* EEP_ASET, Address */
+			>;
+		};
+	};
+};
+
+&weim {
+	fpga-net0 {
+		compatible = "stcmtk,grif-net";
+		target-fpga = <&meta_fpga>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_net1>;
+		reg = <0 0x4000 0x8000>; /* EIM addr range for CPUBUF (port 0) */
+
+		/* CS0 Configuration registers:
+			CSxGCR1, CSxGCR2, CSxRCR1,
+			CSxRCR2, CSxWCR1, CSxWCR2 */
+		fsl,weim-cs-timing = <0x511104AF 0x00001000 0x04000000
+				      0x00000000 0x01000000 0x00000000>;
+
+		mac-address = [02 00 00 44 00 02];
+		port-num = <0>;
+		interrupts-extended = <&gpio1 3  IRQ_TYPE_EDGE_RISING>, /* FPGA_INT0 - TX */
+				      <&gpio3 18 IRQ_TYPE_LEVEL_HIGH>; /* FPGA_INT1 - RX */
+
+		phc-mux = <&phc_mux>;
+		phy-mode = "internal";
+
+		link-gpios = <&gpio1 5 GPIO_ACTIVE_HIGH>; /* FPGA_INT2 - Link state */
+
+		fixed-link {
+			speed = <10000>;
+			full-duplex;
+		};
+	};
+
+	fpga-net1 {
+		compatible = "stcmtk,grif-net";
+		target-fpga = <&meta_fpga>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_net2>;
+		reg = <0 0xc000 0x8000>; /* EIM addr range for CPUBUF (port 1) */
+
+		/* CS0 Configuration registers:
+			CSxGCR1, CSxGCR2, CSxRCR1,
+			CSxRCR2, CSxWCR1, CSxWCR2 */
+		fsl,weim-cs-timing = <0x511104AF 0x00001000 0x04000000
+				      0x00000000 0x01000000 0x00000000>;
+
+		mac-address = [02 00 00 44 00 03];
+		port-num = <1>;
+		interrupts-extended = <&gpio1 23 IRQ_TYPE_EDGE_RISING>, /* FPGA_INT3 - TX */
+				      <&gpio1 22 IRQ_TYPE_LEVEL_HIGH>; /* FPGA_INT4 - RX */
+
+		phc-mux = <&phc_mux>;
+		phy-mode = "internal";
+
+		link-gpios = <&gpio1 8 GPIO_ACTIVE_HIGH>; /* FPGA_INT5 - Link state */
+
+		fixed-link {
+			speed = <10000>;
+			full-duplex;
+		};
+	};
+
+	grif-phc@0 {
+                compatible = "stcmtk,phc";
+                stcmtk,port-num = <0>;
+                target-fpga = <&meta_fpga>;
+                bus-type = "eim";
+                reg = <0 0x0 0x1e>, /* CR reg port 0 */
+                      <0 0x3c 0xc>, /* SR reg port 0 */
+                      <0 0x0 0x1e>,
+                      <0 0x1e 0xc>;
+                reg-names = "reg-cr", "reg-sr",
+                            "alt-reg-cr", "alt-reg-sr";
+        };
+
+	grif-phc@1 {
+                compatible = "stcmtk,phc";
+                stcmtk,port-num = <1>;
+                target-fpga = <&meta_fpga>;
+                bus-type = "eim";
+                reg = <0 0x1e 0x1e>, /* CR reg port 1 */
+                      <0 0x48 0xc>,  /* SR reg port 1 */
+                      <0 0x0 0x1e>,
+                      <0 0x1e 0xc>;
+                reg-names = "reg-cr", "reg-sr",
+                            "alt-reg-cr", "alt-reg-sr";
+        };
+};

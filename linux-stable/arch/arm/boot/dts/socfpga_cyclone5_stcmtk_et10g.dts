@@ -1,0 +1,429 @@
+/*
+ * Copyright Altera Corporation (C) 2012,2014. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <dt-bindings/leds/leds-pca9532.h>
+#include "socfpga_cyclone5_stcmtk.dtsi"
+
+/ {
+	model = "ET-10G Ethernet tester/analyzer";
+
+	cpu-gpio {
+		compatible = "linux,gpio-exporter";
+		status = "okay";
+		exported-gpios = <&portb 19 GPIO_ACTIVE_HIGH>,
+			<&portb 27 GPIO_ACTIVE_HIGH>,
+			<&portb 22 GPIO_ACTIVE_HIGH>;
+		exported-gpio-names = "sfpp-pwr-en",
+			"eeprom-addon-write-protect",
+			"smbus-alert";
+		exported-gpio-directions = "high",
+			"high",
+			"in";
+	};
+
+	soc {
+		ethernet@ff702000 {
+			phy-mode = "rgmii-id";
+		};
+
+		
+		etn-fb {
+			compatible = "etn,fb";
+			etn-fb,fps = <100>;
+			etn-fb,use_fpga2sdram;
+			target-fpga = <&fpga>;
+		};
+
+		fpga-beeper {
+			compatible = "stcmtk,fpga-beeper";
+			target-fpga = <&fpga>;
+		};
+
+		et10g-keys {
+			compatible = "etn,adp5589";
+			i2c-bus = <&i2c0>;
+			addr = <0x34>;
+			interrupt-parent = <&portc>;
+			interrupts = <1 2>;
+			adp5589,scan-cycle-time-ms = <40>;
+			adp5589,pullup-300k = < (~0) >;
+			linux,autorepeat-delay = <500>; /* miliseconds */
+			linux,autorepeat-period = <50>; /* miliseconds */
+			linux,keymap = <
+				MATRIX_KEY(0, 0, KEY_KPASTERISK)
+				MATRIX_KEY(1, 0, KEY_7)
+				MATRIX_KEY(2, 0, KEY_4)
+				MATRIX_KEY(3, 0, KEY_1)
+				MATRIX_KEY(4, 0, KEY_HOME)
+				MATRIX_KEY(5, 0, KEY_LEFT)
+				MATRIX_KEY(6, 0, KEY_ESC)
+				MATRIX_KEY(7, 0, KEY_F1)
+				MATRIX_KEY(0, 1, KEY_0)
+				MATRIX_KEY(1, 1, KEY_8)
+				MATRIX_KEY(2, 1, KEY_5)
+				MATRIX_KEY(3, 1, KEY_2)
+				MATRIX_KEY(4, 1, KEY_DOWN)
+				MATRIX_KEY(5, 1, KEY_UP)
+				MATRIX_KEY(6, 1, KEY_F2)
+				MATRIX_KEY(7, 1, KEY_F3)
+				MATRIX_KEY(0, 2, KEY_GRAVE)
+				MATRIX_KEY(1, 2, KEY_9)
+				MATRIX_KEY(2, 2, KEY_6)
+				MATRIX_KEY(3, 2, KEY_3)
+				MATRIX_KEY(4, 2, KEY_END)
+				MATRIX_KEY(5, 2, KEY_RIGHT)
+				MATRIX_KEY(6, 2, KEY_ENTER)
+				MATRIX_KEY(7, 2, KEY_F4)
+				>;
+		};
+
+		i2c0: i2c@ffc04000 {
+			scl-gpios = <&portc 6 GPIO_ACTIVE_HIGH>;
+			sda-gpios = <&portc 5 GPIO_ACTIVE_HIGH>;
+
+			eeprom-addon@53 {
+				compatible = "at,24c02";
+				reg = <0x53>;
+				status = "okay";
+			};
+
+			eeprom-main@56 {
+				compatible = "at,24c02";
+				reg = <0x56>;
+				status = "okay";
+			};
+
+			adc@48 {
+				compatible = "ti,ads7830";
+				reg = <0x48>;
+				status = "okay";
+			};
+
+			lm85: lm85@2d {
+				compatible = "adi,adt7463";
+				reg = <0x2d>;
+			};
+
+			expander: pca9535-addon@20 {
+				compatible = "nxp,pca9535";
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x20>;
+				pinctrl-names = "default";
+				/*
+				interrupt-parent = <&portb>;
+				interrupts = <23 IRQ_TYPE_LEVEL_LOW>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				*/
+			};
+
+			pca9535-main@21 {
+				compatible = "nxp,pca9535";
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x21>;
+				pinctrl-names = "default";
+				/*
+				interrupt-parent = <&portb>;
+				interrupts = <23 IRQ_TYPE_LEVEL_LOW>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
+				*/
+			};
+
+			pca9532: pca9532@60 {
+				compatible = "nxp,pca9532";
+/*				gpio-controller;
+				#gpio-cells = <2>;
+				#address-cells = <1>;
+				#size-cells = <0>;*/
+				reg = <0x60>;
+				status = "okay";
+
+				green_led_0 {
+					label = "green0";
+					type = <PCA9532_TYPE_LED>;
+				};
+				green_led_1 {
+					label = "green1";
+					type = <PCA9532_TYPE_LED>;
+				};
+				green_led_2 {
+					label = "green2";
+					type = <PCA9532_TYPE_LED>;
+				};
+				green_led_3 {
+					label = "green3";
+					type = <PCA9532_TYPE_LED>;
+				};
+				green_led_4 {
+					label = "green4";
+					type = <PCA9532_TYPE_LED>;
+				};
+				green_led_5 {
+					label = "green5";
+					type = <PCA9532_TYPE_LED>;
+				};
+				green_led_6 {
+					label = "green6";
+					type = <PCA9532_TYPE_LED>;
+				};
+				green_led_7 {
+					label = "green7";
+					type = <PCA9532_TYPE_LED>;
+				};
+				red_led_0 {
+					label = "red0";
+					type = <PCA9532_TYPE_LED>;
+				};
+				red_led_1 {
+					label = "red1";
+					type = <PCA9532_TYPE_LED>;
+				};
+				red_led_2 {
+					label = "red2";
+					type = <PCA9532_TYPE_LED>;
+				};
+				red_led_3 {
+					label = "red3";
+					type = <PCA9532_TYPE_LED>;
+				};
+				red_led_4 {
+					label = "red4";
+					type = <PCA9532_TYPE_LED>;
+				};
+				red_led_5 {
+					label = "red5";
+					type = <PCA9532_TYPE_LED>;
+				};
+				red_led_6 {
+					label = "red6";
+					type = <PCA9532_TYPE_LED>;
+				};
+				red_led_7 {
+					label = "red7";
+					type = <PCA9532_TYPE_LED>;
+				};
+			};
+
+
+			i2c-switch@70 {
+				compatible = "nxp,pca9544";
+				#address-cells = <0x1>;
+				#size-cells = <0x0>;
+				reg = <0x70>;
+				i2c-mux-idle-disconnect;
+
+				/* The following two nodes describe I2C busses
+				* located behind the MUX on channels 0 and 1
+				* (indexed from 0).
+				*/
+				sfp_mux_chan_0: i2c@0 {
+					#address-cells = <0x1>;
+					#size-cells = <0x0>;
+					reg = <0>;
+				};
+
+				sfp_mux_chan_1: i2c@1 {
+					#address-cells = <0x1>;
+					#size-cells = <0x0>;
+					reg = <1>;
+				};
+
+				/* The following two nodes describe I2C mux
+				* channels 2 and 3 (indexed from 0) that have
+				* no devices connected to them.
+				*
+				* It would be great to disable them at all so
+				* that they would not appear in sysfs but we
+				* couldn't find an easy and obvious way to
+				* achieve this.
+				*/
+				sfp_mux_chan_2: i2c@2 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <2>;
+				};
+				sfp_mux_chan_3: i2c@3 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					reg = <3>;
+				};
+			};
+
+		};
+
+		i2c1: i2c@ffc05000 {
+			status = "okay";
+			scl-gpios = <&portc 0 GPIO_ACTIVE_HIGH>;
+			sda-gpios = <&portb 28 GPIO_ACTIVE_HIGH>;
+			battery@b {
+				compatible = "ti,bq40z50";
+				reg = <0x0b>;
+			};
+
+			charger@9 {
+				compatible = "linear,ltc4100";
+				reg = <0x09>;
+			};
+
+		};
+
+		etn-port0 {
+			compatible = "stcmtk,etln-10g";
+			target-fpga = <&fpga>;
+			port-num = <0>;
+			phy-handle = <&mv_ch0>;
+			phy-mode = "xaui";
+			mac-address = [ 00 21 CE 4C 00 02 ];
+		};
+
+		etn-port1 {
+			compatible = "stcmtk,etln-10g";
+			target-fpga = <&fpga>;
+			port-num = <1>;
+			phy-handle = <&mv_ch2>;
+			phy-mode = "xaui";
+			mac-address = [ 00 21 CE 4C 00 03 ];
+		};
+
+		etn-phc@0 {
+			reg = <0xc0020000 36>;
+		};
+
+		etn-phc@1 {
+			reg = <0xc0020080 36>;
+		};
+
+		etn-phc-mux {
+			reg = <0xc0020100 4>;
+		};
+	};
+
+	leds-hps {
+		compatible = "gpio-leds";
+		hps0 {
+			label = "status_led";
+			gpios = <&portb 6 0>;
+			linux,default-trigger = "default-on";
+		};
+		hps1 {
+			label = "stat_red";
+			gpios = <&porta 9 0>;
+			linux,default-trigger = "none";
+		};
+		hps2 {
+			label = "stat_green";
+			gpios = <&portb 12 1>;
+			linux,default-trigger = "default-on";
+		};
+	};
+
+	gpio_keys {
+		compatible = "gpio-keys";
+		user_button {
+			label = "user_button";
+			gpios = <&portb 8 GPIO_ACTIVE_LOW>;
+			linux,code = <2>;
+			gpio-key,wakeup;
+		};
+		power_button {
+			label = "power_button";
+			gpios = <&portb 24 GPIO_ACTIVE_LOW>;
+			linux,code = <116>;
+			gpio-key,wakeup;
+		};
+/*		ltc4100_int {
+			label = "ltc4100_int";
+			gpios = <&portb 22 GPIO_ACTIVE_LOW>;
+			linux,code = <236>;
+			gpio-key,wakeup;
+		};*/
+	};
+
+	gpio_poweroff {
+		compatible = "gpio-poweroff";
+		gpios = <&portb 25 GPIO_ACTIVE_HIGH>;
+	};
+
+	sfp_eth0: sfp-eth0 {
+		compatible = "sff,sfp";
+		i2c-bus = <&sfp_mux_chan_0>;
+		pinctrl-names = "default";
+		mod-def0-gpios = <&expander 10 GPIO_ACTIVE_LOW>;
+		tx-disable-gpios = <&expander 9 GPIO_ACTIVE_HIGH>;
+		tx-fault-gpios  = <&expander 8 GPIO_ACTIVE_HIGH>;
+		los-gpios = <&expander 12 GPIO_ACTIVE_HIGH>;
+	};
+
+	sfp_eth1: sfp-eth1 {
+		compatible = "sff,sfp";
+		i2c-bus = <&sfp_mux_chan_1>;
+		pinctrl-names = "default";
+		mod-def0-gpios = <&expander 2 GPIO_ACTIVE_LOW>;
+		tx-disable-gpios = <&expander 1 GPIO_ACTIVE_HIGH>;
+		tx-fault-gpios  = <&expander 0 GPIO_ACTIVE_HIGH>;
+		los-gpios = <&expander 4 GPIO_ACTIVE_HIGH>;
+	};
+
+	mdio0: mdio-0 {
+		compatible = "stcmtk,et-10g-mdio";
+		target-fpga = <&fpga>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "okay";
+
+		mv_ch0:88X2222@0 {
+			compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45";
+			reg = <0x0>;
+			phy-mode = "xgmii";
+			mv,line-mode = "KR";
+			mv,host-mode = "KX4";
+			sfp = <&sfp_eth0>;
+			status = "okay";
+		};
+
+		mv_ch1:88X2222@1 {
+			compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45";
+			reg = <0x1>;
+			phy-mode = "xgmii";
+			mv,line-mode = "KR";
+			mv,host-mode = "KX4";
+			status = "disabled";
+		};
+
+		mv_ch2:88X2222@2 {
+			compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45";
+			reg = <0x2>;
+			phy-mode = "xgmii";
+			mv,line-mode = "KR";
+			mv,host-mode = "KX4";
+			sfp = <&sfp_eth1>;
+			status = "okay";
+		};
+
+		mv_ch3:88X2222@3 {
+			compatible = "marvell,88x2222", "ethernet-phy-ieee802.3-c45";
+			reg = <0x3>;
+			phy-mode = "xgmii";
+			mv,line-mode = "KR";
+			mv,host-mode = "KX4";
+			status = "disabled";
+		};
+
+	};
+};

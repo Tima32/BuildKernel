@@ -1,0 +1,13 @@
+#
+# SoC-based devices PHC
+#
+
+config ETN_PHC
+        tristate "ETN PHC driver"
+        depends on ETN_FPGA_MGR && ETN_PHC_MUX && COMMON_FPGA_DRIVER
+        default m
+        help
+            etn_phc -- PTP Hardware Clock (PHC) driver for SoC-based devices.
+            This driver provides access to PHC clocks implemented in FPGA of SoC-based
+            devices. It registers a platform driver that handles platform device with
+            compatible = "etn,phc".

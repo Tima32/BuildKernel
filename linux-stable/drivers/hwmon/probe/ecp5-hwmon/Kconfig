@@ -1,0 +1,5 @@
+config ECP5_HWMON
+        tristate "Lattice ECP5 FPGA"
+	depends on GRIF_FPGA_MGR
+        help
+          Hardware monitor driver for Lattice ECP5 FPGA.

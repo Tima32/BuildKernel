@@ -1,0 +1,16 @@
+#
+# SoC-based devices PHC MUX
+#
+
+config ETN_PHC_MUX
+        tristate "ETN PHC MUX driver"
+        depends on ETN_FPGA_MGR && COMMON_FPGA_DRIVER
+        default m
+        help
+            etn-phc-mux -- driver to control mapping between network ports and PHC clocks.
+            Once the driver is registered within the kernel and starts handling such device
+            it creates file named separate_phc_mode in the sysfs directory of its device.
+            Such a directory is usually located at /sys/bus/platform/soc/<my-device-name>.
+            One can set the contents of this file to:
+                1 -- switch the driver to mode with separate PTP clock being used by each NIC
+                0 -- switch the driver to mode with single PTP clock being shared by the NICs (default).

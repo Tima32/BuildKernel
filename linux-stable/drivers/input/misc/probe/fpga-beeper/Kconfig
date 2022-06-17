@@ -1,0 +1,5 @@
+config FPGA_BEEPER
+    tristate "PROBE FPGA beeper for devices with FPGA_FEAT_BEEPER"
+    depends on ETN_FPGA_MGR && COMMON_FPGA_DRIVER
+    default m
+

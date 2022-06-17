@@ -1,0 +1,95 @@
+/*
+ * Copyright Altera Corporation (C) 2012,2014. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "socfpga_cyclone5_viman.dtsi"
+
+/ {
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		reserved0: buffer@22328000 {
+			compatible = "shared-dma-pool";
+			no-map;
+			reg = <0x22328000 0xee6c000>; /* 125 MB */
+		};
+
+		reserved1: buffer@31194000 {
+			compatible = "shared-dma-pool";
+			no-map;
+			reg = <0x31194000 0xee6c000>; /* 125 MB */
+		};
+	};
+
+	soc {
+		fpga-io {
+			compatible = "etn,io";
+			h2f = <0xc0000000 0x1000>;
+			lwh2f = <0xff200000 0x1000>;
+			rstmgr = <0xffd05000 0x1000>;
+			l3regs = <0xff800000 0x1000>;
+		};
+
+		etn-port0 {
+			compatible = "etn,net,netdma";
+			etn,port-num = <0>;
+			interrupts = <0x0 0x28 0x1 0x0 0x29 0x1>;
+			mac-address = [ 00 21 CE 02 00 01];
+		};
+
+		etn-port1 {
+			compatible = "etn,net,netdma";
+			etn,port-num = <1>;
+			interrupts = <0x0 0x2A 0x1 0x0 0x2B 0x1>;
+			mac-address = [ 00 21 CE 02 00 02];
+		};
+
+		etn-phc@0 {
+			compatible = "etn,phc";
+			stcmtk,port-num = <0>;
+			reg = <0xc0006000 36>;
+			interrupts = <0x0 0x2C 0x1>;
+		};
+
+		etn-phc@1 {
+			compatible = "etn,phc";
+			stcmtk,port-num = <1>;
+			reg = <0xc0006080 36>;
+			interrupts = <0x0 0x2D 0x1>;
+		};
+
+		etn-phc-mux {
+			compatible = "etn,phc-mux";
+			reg = <0xc0006100 4>;
+		};
+
+		pkt-buffer@0{
+			compatible = "stcmtk,mem_reserve";
+			dev-name = "pkt_buffer0";
+			mem-size = <0x7735940>;
+			memory-region = <&reserved0>;
+		};
+
+		pkt-buffer@1{
+			compatible = "stcmtk,mem_reserve";
+			dev-name = "pkt_buffer1";
+			mem-size = <0x7735940>;
+			memory-region = <&reserved1>;
+		};
+
+	};
+};

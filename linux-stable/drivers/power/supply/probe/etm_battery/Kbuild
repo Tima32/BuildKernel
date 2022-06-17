@@ -1,0 +1,7 @@
+# This Makefile-style file is included by kernel build system Kbuild. It
+# describes what modules have to be built and how to build them.
+
+# Drivers to build
+
+obj-$(CONFIG_ETM_BATTERY) += etm-battery.o
+etm-battery-objs := main.o

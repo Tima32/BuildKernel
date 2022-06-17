@@ -1,0 +1,35 @@
+Grif GPIO driver
+=========================
+
+This driver make `gpiochip` device for SFP_CTL feture in FPGA.
+
+Numeration (offsets) of gpio lines in `gpiochip`:
+
+Output
+  - RATE_SEL   - 0
+  - TX_DISABLE - 1
+
+Input
+  - MOD_ABS    - 2
+  - RX_LOS     - 3
+  - TX_FLT     - 4
+
+## Limitations
+
+  - Hardcoded register addresses
+  - `grif_fpga_manager` dependency for feature info
+  - Only for `port` 0 (no `port_mask` support)
+
+## Device Tree bindings
+
+Example:
+
+```
+sfp0_gpio: fpga-sfp0-gpio {
+               compatible = "stcmtk,grif-gpio";
+               target-fpga = <&fpga0>;
+               gpio-controller;
+               #gpio-cells = <2>;
+               gpio-line-names = "RATE_SEL", "TX_DISABLE", "MOD_ABS", "RX_LOS", "TX_FAULT";
+       };
+```

@@ -1,0 +1,53 @@
+/dts-v1/;
+
+#include "stcmtk-grif.dtsi"
+
+/ {
+	compatible = "stcmtk,smartsfp","fsl,imx6ull";
+};
+
+&cpu0 {
+	arm-supply = <&reg_arm>;
+	soc-supply = <&reg_soc>;
+
+	/* Here we define OPP for LDO-bypass mode */
+	operating-points = <
+		/* kHz	uV */
+		528000	1175000
+		396000	1175000
+		198000	1175000
+	>;
+	fsl,soc-operating-points = <
+		/* KHz	uV */
+		528000	1175000
+		396000	1175000
+		198000	1175000
+	>;
+	fsl,arm-soc-shared = <1>;
+	clock-frequency = <528000000>;
+};
+
+&gpc {
+	fsl,cpu_pupscr_sw2iso = <0xf>;
+	fsl,cpu_pupscr_sw = <0x0>;
+	fsl,cpu_pdnscr_iso2sw = <0x1>;
+	fsl,cpu_pdnscr_iso = <0x1>;
+	fsl,ldo-bypass = <1>; /* PMIC, ldo-bypass */
+};
+
+&i2c3 {
+	clock-frequency = <400000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_i2c3>;
+	status = "okay";
+
+	pmic: pfuze3000@8 {
+		compatible = "fsl,pfuze3000";
+		reg = <0x08>;
+	};
+};
+
+&iomuxc {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_hog_1>;
+};

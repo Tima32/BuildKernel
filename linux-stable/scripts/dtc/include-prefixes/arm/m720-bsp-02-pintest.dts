@@ -1,0 +1,175 @@
+#include "m720-hwtests.dtsi"
+
+/ {
+	gpio-pin-test {
+		compatible = "linux,gpio-exporter";
+		status = "okay";
+		exported-gpios = <&gpio4 16 GPIO_ACTIVE_HIGH>,
+				 <&gpio4 11 GPIO_ACTIVE_HIGH>,
+				 <&gpio4 21 GPIO_ACTIVE_HIGH>,
+				 <&gpio4 22 GPIO_ACTIVE_HIGH>,
+				 <&gpio4 23 GPIO_ACTIVE_HIGH>,
+				 <&gpio4 24 GPIO_ACTIVE_HIGH>,
+				 <&gpio4 25 GPIO_ACTIVE_HIGH>,
+				 <&gpio4 26 GPIO_ACTIVE_HIGH>,
+				 <&gpio4 27 GPIO_ACTIVE_HIGH>,
+				 <&gpio4 28 GPIO_ACTIVE_HIGH>,
+				 <&gpio4  2 GPIO_ACTIVE_HIGH>,
+				 <&gpio4  3 GPIO_ACTIVE_HIGH>,
+				 <&gpio4  4 GPIO_ACTIVE_HIGH>,
+				 <&gpio4  5 GPIO_ACTIVE_HIGH>,
+				 <&gpio4  6 GPIO_ACTIVE_HIGH>,
+				 <&gpio4  7 GPIO_ACTIVE_HIGH>,
+				 <&gpio4  8 GPIO_ACTIVE_HIGH>,
+				 <&gpio4  9 GPIO_ACTIVE_HIGH>,
+				 <&gpio4 20 GPIO_ACTIVE_HIGH>,
+				 <&gpio4 17 GPIO_ACTIVE_HIGH>,
+				 <&gpio4 19 GPIO_ACTIVE_HIGH>,
+				 <&gpio4 18 GPIO_ACTIVE_HIGH>,
+				 <&gpio1 28 GPIO_ACTIVE_HIGH>,
+				 <&gpio1 29 GPIO_ACTIVE_HIGH>,
+				 <&gpio3  8 GPIO_ACTIVE_HIGH>,
+				 <&gpio3  7 GPIO_ACTIVE_HIGH>,
+				 <&gpio1  3 GPIO_ACTIVE_HIGH>,
+				 <&gpio3 18 GPIO_ACTIVE_HIGH>,
+				 <&gpio1  5 GPIO_ACTIVE_HIGH>,
+				 <&gpio1 23 GPIO_ACTIVE_HIGH>,
+				 <&gpio1 22 GPIO_ACTIVE_HIGH>,
+				 <&gpio1  8 GPIO_ACTIVE_HIGH>,
+				 <&gpio1  2 GPIO_ACTIVE_HIGH>;
+		exported-gpio-names = "01.EIM_WAIT",
+				      "02.EIM_BCLK",
+				      "03.EIM_AD0",
+				      "04.EIM_AD1",
+				      "05.EIM_AD2",
+				      "06.EIM_AD3",
+				      "07.EIM_AD4",
+				      "08.EIM_AD5",
+				      "09.EIM_AD6",
+				      "10.EIM_AD7",
+				      "11.EIM_AD8",
+				      "12.EIM_AD9",
+				      "13.EIM_AD10",
+				      "14.EIM_AD11",
+				      "15.EIM_AD12",
+				      "16.EIM_AD13",
+				      "17.EIM_AD14",
+				      "18.EIM_AD15",
+				      "19.EIM_LBA",
+				      "20.EIM_CS",
+				      "21.EIM_RW",
+				      "22.EIM_OE",
+				      "23.HOST_SCL",
+				      "24.HOST_SDA",
+				      "25.PTP_REQ",
+				      "26.PTP_INTN",
+				      "27.FPGA_INT_0",
+				      "28.FPGA_INT_1",
+				      "29.FPGA_INT_2",
+				      "30.FPGA_INT_3",
+				      "31.FPGA_INT_4",
+				      "32.FPGA_INT_5",
+				      "33.SDMA_INT";
+		exported-gpio-directions = "in", "in", "in", "in", "in",
+					   "in", "in", "in", "in", "in",
+					   "in", "in", "in", "in", "in",
+					   "in", "in", "in", "in", "in",
+					   "in", "in", "in", "in", "in",
+					   "in", "in", "in", "in", "in",
+					   "in", "in", "in";
+	};
+};
+&ecspi1 {
+	fpga0: fpga@1 {
+		compatible = "stcmtk,grif-fpga-mgr-spi";
+		fpga-name = "FPGA for pin-tests";
+		firmware-name = "m720_02_aa-fpga-pin-test.img";
+		spi-max-frequency = <20000000>;
+		reg = <1>;
+		status = "okay";
+		cs-gpios = <&gpio3 26 GPIO_ACTIVE_HIGH>;
+		ecp5-fpga-mgr = <&ecp5>;
+		vcc-supply = <&pmic_fpga_core_reg>;
+		vcc-tra-supply = <&pmic_fpga_tra_reg>;
+		vcc-aux-supply = <&pmic_fpga_aux_reg>;
+		no-parse-fpga-features;
+	};
+};
+
+&iomuxc {
+	stcmtk-smart-sfp {
+		pinctrl_hog_1: hoggrp-1 {
+			fsl,pins = <
+				/* EIM */
+				MX6UL_PAD_NAND_DQS__GPIO4_IO16		0x000010B0
+				MX6UL_PAD_NAND_WP_B__GPIO4_IO11		0x000010B0
+				MX6UL_PAD_CSI_DATA00__GPIO4_IO21	0x000010B0
+				MX6UL_PAD_CSI_DATA01__GPIO4_IO22	0x000010B0
+				MX6UL_PAD_CSI_DATA02__GPIO4_IO23	0x000010B0
+				MX6UL_PAD_CSI_DATA03__GPIO4_IO24	0x000010B0
+				MX6UL_PAD_CSI_DATA04__GPIO4_IO25	0x000010B0
+				MX6UL_PAD_CSI_DATA05__GPIO4_IO26	0x000010B0
+				MX6UL_PAD_CSI_DATA06__GPIO4_IO27	0x000010B0
+				MX6UL_PAD_CSI_DATA07__GPIO4_IO28	0x000010B0
+				MX6UL_PAD_NAND_DATA00__GPIO4_IO02	0x000010B0
+				MX6UL_PAD_NAND_DATA01__GPIO4_IO03	0x000010B0
+				MX6UL_PAD_NAND_DATA02__GPIO4_IO04	0x000010B0
+				MX6UL_PAD_NAND_DATA03__GPIO4_IO05	0x000010B0
+				MX6UL_PAD_NAND_DATA04__GPIO4_IO06	0x000010B0
+				MX6UL_PAD_NAND_DATA05__GPIO4_IO07	0x000010B0
+				MX6UL_PAD_NAND_DATA06__GPIO4_IO08	0x000010B0
+				MX6UL_PAD_NAND_DATA07__GPIO4_IO09	0x000010B0
+				MX6UL_PAD_CSI_HSYNC__GPIO4_IO20		0x000010B0
+				MX6UL_PAD_CSI_MCLK__GPIO4_IO17		0x000010B0
+				MX6UL_PAD_CSI_VSYNC__GPIO4_IO19		0x000010B0
+				MX6UL_PAD_CSI_PIXCLK__GPIO4_IO18	0x000010B0
+
+				/* HOST I2C */
+				MX6UL_PAD_UART4_TX_DATA__GPIO1_IO28	0x000010B0
+				MX6UL_PAD_UART4_RX_DATA__GPIO1_IO29	0x000010B0
+
+				/* SFP I2C */
+				MX6UL_PAD_LCD_DATA03__GPIO3_IO08	0x000010B0
+				MX6UL_PAD_LCD_DATA02__GPIO3_IO07	0x000010B0
+
+				/* FPGA INT 0 - 5 */
+				MX6UL_PAD_GPIO1_IO03__GPIO1_IO03	0x000010B0
+				MX6UL_PAD_LCD_DATA13__GPIO3_IO18	0x000010B0
+				MX6UL_PAD_GPIO1_IO05__GPIO1_IO05	0x000010B0
+				MX6UL_PAD_UART2_RTS_B__GPIO1_IO23	0x000010B0
+				MX6UL_PAD_UART2_CTS_B__GPIO1_IO22	0x000010B0
+				MX6UL_PAD_GPIO1_IO08__GPIO1_IO08	0x000010B0
+
+				/* SDMA */
+				MX6UL_PAD_GPIO1_IO02__GPIO1_IO02	0x000010B0
+			>;
+		};
+	};
+};
+
+&pmic	{
+	regulators {
+	        /* 3V3_SFP - test point P11 */
+	        pmic_laser_reg: sw2 {
+			regulator-name = "not_connected";
+			regulator-min-microvolt = <3000000>;
+			regulator-max-microvolt = <3300000>;
+		};
+		/* 2V5_FPGA - test point P10 */
+		pmic_fpga_aux_reg: vldo1 {
+			regulator-name = "fpga_vccaux_vccauxa";
+			regulator-min-microvolt = <2400000>;
+			regulator-max-microvolt = <2600000>;
+			regulator-boot-on;
+			regulator-always-on;
+		};
+		/* 1V1_TRA - test point P6 */
+		pmic_fpga_tra_reg: vldo2 {
+			regulator-name = "fpga_vcch";
+			regulator-min-microvolt = <1050000>;
+			regulator-max-microvolt = <1150000>;
+			regulator-boot-on;
+			regulator-always-on;
+		};
+	};
+};

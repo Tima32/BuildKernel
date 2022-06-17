@@ -1,0 +1,7 @@
+config GPIO_EXPORTER
+        tristate "Probe GPIO exporter"
+        depends on GPIO_SYSFS
+        help
+          Module provides functionality for gpio naming and pre-configuring from device-tree
+          
+

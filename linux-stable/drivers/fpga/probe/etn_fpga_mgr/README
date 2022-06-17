@@ -1,0 +1,152 @@
+ETN FPGA manager
+================
+
+etn_fpga_mgr - is an extension of Altera FPGA manager
+<https://github.com/altera-opensource/linux-socfpga/blob/ACDS19.3_REL_GSRD_PR/drivers/fpga/socfpga.c>
+
+New features of ETN FPGA manager:
+
+* FPGA features support
+* Ref counting
+* FPGA flasing at module load time
+* Kernel API
+
+FPGA features
+-------------
+
+Each FPGA firmware has its own subset of features - things that it can do.
+Feature descriptors are located in the zero address of firmware image.
+
+Feature is comprised of:
+
+* name
+* description
+* type - feature index in enum for fast lookup (without strncmp)
+* cr_base - Base address for feature control registers
+* cr_cnt - Amount of feature control registers
+* sr_base - Base address for feature status registers
+* sr_cnt - Amount of feature status registers
+* port_mask - Mask of ports supported by this feature
+
+IMPORTANT - cr_count (and sr_count) shows amount of registers for single port. If
+feature is supported on 2 ports then *real* amount of register will be 
+"2 * cr_count".
+
+port_mask set bit indicates that feature support on port corresponding to bit
+number. For example port_mask 0x3 = 0b11 means that feature is supported on
+ports 0 and 1.
+
+Here are the features with its descriptions (from features.h)
+
+	/* Supported FPGA features descriptions. */
+	static const char *fpga_feature_descriptors[] = {
+		[ FPGA_FEATURE_MX_FPGA_ID ]    = "Features descriptor",
+		[ FPGA_FEATURE_MX_PHY ]        = "Low-level access to physical periphery",
+		[ FPGA_FEATURE_MX_STAT ]       = "MX statistics support",
+		[ FPGA_FEATURE_FLEX_FILT ]     = "Flexible filters support",
+		[ FPGA_FEATURE_FLEX_FILT_PM  ] = "Pattern-match filters extension support",
+		[ FPGA_FEATURE_FLEX_FILT_RTP ] = "RTP/RTCP filters extension support",
+		[ FPGA_FEATURE_FS_FILT ]       = "Field-split filters support",
+		[ FPGA_FEATURE_FIELDS_RPL ]    = "Fields replacing support",
+		[ FPGA_FEATURE_HTP_PACKER ]    = "Header Transfer Protocol support",
+		[ FPGA_FEATURE_PKT_ENCAPS ]    = "Packet encapsulation support",
+		[ FPGA_FEATURE_FLOW_GEN ]      = "Flow generators support",
+		[ FPGA_FEATURE_SIGN_ANLZ ]     = "Traffic analyzer support",
+		[ FPGA_FEATURE_NIC_CPU_BUF ]   = "Network interface controller CPU buffer",
+		[ FPGA_FEATURE_RMON_STAT ]     = "Port statistic (RMON) support",
+		[ FPGA_FEATURE_LB ]            = "Smart Loopback support",
+		[ FPGA_FEATURE_TWAMP_RX_FILT ] = "TWAMP rx filters support",
+		[ FPGA_FEATURE_TWAMP_REFL ]    = "TWAMP reflector support",
+		[ FPGA_FEATURE_NIC_CTRL ]      = "Network interface controller support",
+
+		... etc ... (see fpgafeat.h for the full supported list)
+
+		NULL
+	};
+
+Each firmware must contain MX_FPGA_ID feature. It is required to obtain other
+feature properties. It also contains information on currently used firmware like
+name, version, ROM id. These three are shown to userspace as `firmware_info`
+sysfs file in the following format:
+
+  ABCD 0.1.2-3 0x1
+      `       `   `- ROM Header version
+       `       `---- Firmware version
+        `----------- Firmware name (usually contains device name: ETN, ETLN, etc)
+
+When driver is probing or when FPGA is reflashed features as well as firmware
+information are reread and reparsed.
+
+Features are exported to userspace via sysfs as kset. Where every kobject of
+that kset contains attributes describing feature. It looks like that:
+
+	/sys/class/fpga/fpga0/
+	 +- ...
+	 +- firmware_info
+	 +- features
+		 +- MX_FPGA_ID
+		 +- MX_PHY
+		 +- ...
+		 +- NIC_CTRL
+			  +- description
+			  +- type
+			  +- port_mask
+			  +- cr_base
+			  +- cr_cnt
+			  +- sr_base
+			  +- sr_cnt
+
+
+Ref counting
+------------
+
+To prevent reflashing of FPGA when it's used we have ref counter in etn_fpga
+structure. This ref counter incremented in etn_io and etn_net on loading and
+decremented on unloading.
+
+When FPGA are about to be reflashed (alt_fpga_configure_init) we check this ref
+counter and disallow reflashing if it's not zero.
+
+This means that to reflash FPGA you must unload all modules holding
+etn_fpga_ref_get (one way to do this is to rmmod all modules using etn_fpga_mgr
+that are shown in `lsmod` output). This guarantees that no userspace access can
+be done because it doesn't have any device (muahaha).
+
+Flashing FPGA at module load time
+---------------------------------
+
+Typically on each startup the FPGA is flashed. This can be done in various ways
+(e.g. runit/udev scripts). To do this modules that hold reference count
+described above have to be unloaded and reloaded again after flashing FPGA,
+which brings unnecessary delay.
+
+To avoid this, FPGA is flashed every time `etn_fpga_mgr.ko` is loaded. The path
+to firmware to be used is given in `fw_path` module parameter that defaults to
+"fpga/fpga.rbf". The path is relative to "/lib/firmware". If the specified file
+does not exist, nothing is done.
+
+Kernel API
+----------
+
+ETN FPGA manager provides kernel API method for:
+
+* FPGA status - etn_fpga_state_get
+* Ref counting - etn_fpga_ref_get/put
+* FPGA features - etn_fpga_get_feature, etn_fpga_feature_cr/sr_base_on_port
+* Regmap access - stcmtk_get_fpga returns "struct stcmtk_common_fpga*" (regmap is accessible via stcmtk_common_fpga->regmap)
+
+FPGA statuses:
+
+* ETN_FPGA_STATE_USER_MODE - FPGA is available for user
+* ETN_FPGA_STATE_INVALID - FPGA cannot be user.
+
+Device tree
+----------
+
+In order to work with etn_fpga structure other devices must have a phandle target-fpga = <&fpga>;
+in their nodes. It could be obtained with stcmtk_get_fpga().
+
+Authors
+-------
+
+STC Metrotek System Team <system@metrotek.ru>

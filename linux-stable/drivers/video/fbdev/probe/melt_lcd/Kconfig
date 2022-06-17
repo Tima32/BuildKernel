@@ -1,0 +1,8 @@
+#
+# Probe device configuration
+#
+
+config FB_MELT_LCD
+	tristate "MELT MT-12232A LCD driver"
+	help
+	  This driver implements support for MELT MT-12232A LCD
