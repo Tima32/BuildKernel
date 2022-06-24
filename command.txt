@@ -1,1 +1,11 @@
-make DEBFULLNAME=MyName DEBEMAIL=my@mail.org UTS_MACHINE=armhf KBUILD_IMAGE=uImage KDEB_CHANGELOG_DIST=buster bindeb-pkg -j4
+export ARCH=arm CROSS_COMPILE=~/src/kernel-build/gcc-linaro-6.5/bin/arm-linux-gnueabihf- LOADADD=0
+make probe_defconfig
+make zImage -j8
+make modules
+make modules_install INSTALL_MOD_PATH=./build/
+make dtbs
+
+
+
+make modules_prepare  --только для сторонних модулей
+make mrproper --clean
