@@ -1,1 +1,4 @@
+export ARCH=arm CROSS_COMPILE=~/src/gcc-linaro-6.5/bin/arm-linux-gnueabihf- LOADADD=0
+
+
 export ARCH=arm CROSS_COMPILE=~/gcc-linaro-6.5/bin/arm-linux-gnueabihf- LOADADD=0
