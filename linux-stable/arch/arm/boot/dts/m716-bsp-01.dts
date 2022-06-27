@@ -99,6 +99,17 @@
 			target-fpga = <&fpga>;
 		};
 
+		etn-rate-limiter0 {
+			compatible = "etn,rate-limiter";
+			target-fpga = <&fpga>;
+			port-num = <0>;
+		};
+		etn-rate-limiter1 {
+			compatible = "etn,rate-limiter";
+			target-fpga = <&fpga>;
+			port-num = <1>;
+		};
+
 };
 
 
